@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MB Diary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand"><span class="logo">✎</span> MB <b>diary</b></div>
+
+  <div class="pager">
+    <button id="prevSpread" title="Previous pages">‹</button>
+    <span id="spreadLabel"></span>
+    <button id="nextSpread" title="Next pages">›</button>
+    <button id="addSpread" class="add">+ New pages</button>
+  </div>
+
+  <div class="actions">
+    <button class="iconbtn" id="undoBtn" title="Undo (⌘Z)"></button>
+    <button class="iconbtn" id="redoBtn" title="Redo (⇧⌘Z)"></button>
+    <button class="iconbtn" id="lookBtn" title="Background & paper"></button>
+    <span class="amb"><button class="iconbtn" id="ambBtn"></button><button class="iconbtn sm" id="ambMore" title="Choose ambience"></button></span>
+    <button class="primary" id="exportBtn"></button>
+  </div>
+</header>
+
+<div class="work">
+  <!-- Centre: the diary -->
+  <main id="main">
+    <div class="book" id="book" data-paper="lined">
+      <div class="paper">
+        <div class="page left">
+          <div class="datehead">
+            <svg viewBox="0 0 24 24" width="30" height="30"><circle cx="12" cy="12" r="5" fill="#ffc83d"/><g stroke="#ffc83d" stroke-width="2" stroke-linecap="round"><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></g></svg>
+            <div><b id="dWeek"></b><span id="dDate"></span></div>
+          </div>
+          <span class="pageno" id="pnL"></span>
+        </div>
+        <div class="page right"><span class="pageno" id="pnR"></span></div>
+      </div>
+
+      <div class="stage" id="stage">
+        <canvas id="overlay"></canvas>
+        <div id="cursor"></div>
+      </div>
+      <div class="ui"><div id="selbox" hidden>
+        <i class="hd rot" data-h="rot"></i>
+        <i class="hd nw" data-h="-1,-1"></i><i class="hd ne" data-h="1,-1"></i>
+        <i class="hd sw" data-h="-1,1"></i><i class="hd se" data-h="1,1"></i>
+      </div></div>
+
+      <div class="rings"><i></i><i></i><i></i></div>
+    </div>
+
+  </main>
+
+  <!-- Right: properties + layers -->
+  <aside class="side" hidden>
+    <section class="card" id="props" hidden></section>
+    <section class="card" id="layersCard" hidden>
+      <div class="cardhead"><h3>Layers</h3><button class="mini" id="addDraw" title="New drawing layer"></button></div>
+      <div id="layerList"></div>
+      <div class="layerfoot">
+        <label class="row"><span>Opacity</span><input type="range" id="layerOp" min="0" max="1" step="0.01" value="1"><output id="layerOpV">100%</output></label>
+        <div class="btnrow" id="layerBtns"></div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<nav class="toolcard" id="toolcard" aria-label="Tools"></nav>
+<div id="flyout" hidden></div>
+<div id="pop" hidden></div>
+<div id="toast"></div>
+<input type="file" id="fImage" accept="image/*" multiple hidden>
+<input type="file" id="fVideo" accept="video/*" hidden>
+<input type="file" id="fAudio" accept="audio/*" hidden>
+
+<script src="stickers.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
