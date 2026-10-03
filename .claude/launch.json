@@ -1,8 +1,45 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "diary", "runtimeExecutable": "python3", "runtimeArgs": ["-m", "http.server", "5173"], "port": 5173 },
-    { "name": "penguin", "runtimeExecutable": "sh", "runtimeArgs": ["-c", "cd \"/Users/manishabarol/squarezix code file/replicate-mobile-app-design\" && exec npx vite --port ${PORT:-5174} --strictPort"], "port": 5174, "autoPort": true },
-    { "name": "linkforest", "runtimeExecutable": "sh", "runtimeArgs": ["-c", "cd \"/Users/manishabarol/squarezix code file/build-eye-catching-link-tree\" && exec npx vite --port ${PORT:-5175} --strictPort"], "port": 5175, "autoPort": true }
+    {
+      "name": "diary",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "5173"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "penguin",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd \"/Users/manishabarol/squarezix code file/replicate-mobile-app-design\" && exec npx vite --port ${PORT:-5174} --strictPort"
+      ],
+      "port": 5174,
+      "autoPort": true
+    },
+    {
+      "name": "linkforest",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd \"/Users/manishabarol/squarezix code file/build-eye-catching-link-tree\" && exec npx vite --port ${PORT:-5175} --strictPort"
+      ],
+      "port": 5175,
+      "autoPort": true
+    },
+    {
+      "name": "postcraft",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd \"/Users/manishabarol/squarezix code file/social-post-studio\" && exec npx vite --port ${PORT:-5176} --strictPort"
+      ],
+      "port": 5176,
+      "autoPort": true
+    }
   ]
 }
