@@ -29,6 +29,23 @@ export default function ShareModal({ url, name, accent, onClose, onOpenLive, not
   const [qr, setQr] = useState('');
   const [dark, setDark] = useState('#1a1033');
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // move focus into the dialog, close on Escape, and hand focus back afterwards
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCloseRef.current();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      previous?.focus();
+    };
+  }, []);
 
   useEffect(() => {
     QRCode.toDataURL(url, {
@@ -84,10 +101,21 @@ export default function ShareModal({ url, name, accent, onClose, onOpenLive, not
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-4 backdrop-blur-sm sm:items-center"
       onClick={onClose}
     >
-      <div className="pop-in w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="share-title"
+        className="pop-in w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-extrabold">Share your Link Forest</h3>
-          <button onClick={onClose} className="rounded-full p-2 hover:bg-neutral-100" aria-label="Close">
+          <h3 id="share-title" className="text-lg font-extrabold">Share your Link Forest</h3>
+          <button
+            ref={closeRef}
+            onClick={onClose}
+            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-neutral-100"
+            aria-label="Close"
+          >
             <FaXmark />
           </button>
         </div>
@@ -95,16 +123,18 @@ export default function ShareModal({ url, name, accent, onClose, onOpenLive, not
         <div className="mb-5 flex gap-1 rounded-full bg-neutral-100 p-1">
           <button
             onClick={() => setTab('qr')}
+            aria-pressed={tab === 'qr'}
             className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2 text-sm font-bold transition ${
-              tab === 'qr' ? 'bg-white shadow' : 'text-neutral-500'
+              tab === 'qr' ? 'bg-white shadow' : 'text-neutral-600'
             }`}
           >
             <FaQrcode /> QR code
           </button>
           <button
             onClick={() => setTab('link')}
+            aria-pressed={tab === 'link'}
             className={`flex flex-1 items-center justify-center gap-2 rounded-full py-2 text-sm font-bold transition ${
-              tab === 'link' ? 'bg-white shadow' : 'text-neutral-500'
+              tab === 'link' ? 'bg-white shadow' : 'text-neutral-600'
             }`}
           >
             <FaLink /> Link
@@ -118,9 +148,9 @@ export default function ShareModal({ url, name, accent, onClose, onOpenLive, not
               style={{ background: `linear-gradient(135deg, ${accent}, #8129d9)` }}
             >
               {qr ? (
-                <img src={qr} alt="QR code" className="h-48 w-48 rounded-2xl bg-white p-2" />
+                <img src={qr} alt="QR code that opens your page" className="h-48 w-48 rounded-2xl bg-white p-2" />
               ) : (
-                <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-white text-xs text-neutral-400">
+                <div className="flex h-48 w-48 items-center justify-center rounded-2xl bg-white text-xs text-neutral-500">
                   Generating…
                 </div>
               )}
@@ -133,6 +163,8 @@ export default function ShareModal({ url, name, accent, onClose, onOpenLive, not
                 <button
                   key={c}
                   onClick={() => setDark(c)}
+                  aria-label={`QR colour ${c}`}
+                  aria-pressed={dark === c}
                   className={`h-6 w-6 rounded-full ring-2 transition hover:scale-110 ${
                     dark === c ? 'ring-[#8129d9]' : 'ring-black/10'
                   }`}
@@ -155,7 +187,7 @@ export default function ShareModal({ url, name, accent, onClose, onOpenLive, not
                 <FaCopy /> Copy image
               </button>
             </div>
-            <p className="mt-3 text-center text-[11px] text-neutral-400">Scan it to open your page instantly.</p>
+            <p className="mt-3 text-center text-[11px] text-neutral-500">Scan it to open your page instantly.</p>
           </div>
         ) : (
           <div className="pop-in">
@@ -179,6 +211,7 @@ export default function ShareModal({ url, name, accent, onClose, onOpenLive, not
                     target="_blank"
                     rel="noopener noreferrer"
                     title={`Share on ${s.label}`}
+                    aria-label={`Share on ${s.label}`}
                     className="flex h-11 w-11 items-center justify-center rounded-full text-lg text-white transition hover:scale-110"
                     style={{ background: s.color }}
                   >
@@ -191,11 +224,11 @@ export default function ShareModal({ url, name, accent, onClose, onOpenLive, not
             <a
               href="#live"
               onClick={onOpenLive}
-              className="mt-4 flex items-center justify-center gap-2 rounded-full bg-[#d2e823] py-3 text-sm font-bold text-neutral-900"
+              className="mt-4 flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#19c37d] via-[#00b3a4] to-[#8129d9] py-3 text-sm font-bold text-white"
             >
               Open live page <FaArrowUpRightFromSquare className="text-xs" />
             </a>
-            <p className="mt-3 text-center text-[11px] leading-snug text-neutral-400">
+            <p className="mt-3 text-center text-[11px] leading-snug text-neutral-500">
               Your data is saved in this browser. Deploy the site to share it publicly.
             </p>
           </div>

@@ -31,6 +31,7 @@ export default function ProfilePage({ data, onOpen }: Props) {
     color: theme.text,
     fontFamily: font.css,
     '--accent': theme.accent,
+    '--page-text': theme.text,
   } as CSSProperties;
 
   const mediaFilter = `blur(${bg.blur}px) ${bg.grayscale ? 'grayscale(1)' : ''}`;
@@ -38,6 +39,7 @@ export default function ProfilePage({ data, onOpen }: Props) {
 
   return (
     <div
+      data-profile
       className={`relative min-h-full w-full overflow-hidden ${theme.animated && !hasMedia ? 'bg-animated' : ''}`}
       style={rootStyle}
     >

@@ -35,6 +35,7 @@ export default function LinksTab({ data, setData }: Props) {
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [openStyle, setOpenStyle] = useState<string | null>(null);
+  const [focusId, setFocusId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const thumbRef = useRef<HTMLInputElement>(null);
   const thumbTarget = useRef<string | null>(null);
@@ -63,7 +64,11 @@ export default function LinksTab({ data, setData }: Props) {
       return { ...d, links };
     });
 
-  const addLink = () => setData((d) => ({ ...d, links: [makeLink(), ...d.links] }));
+  const addLink = () => {
+    const link = makeLink();
+    setFocusId(link.id);
+    setData((d) => ({ ...d, links: [link, ...d.links] }));
+  };
 
   return (
     <div className="space-y-5">
@@ -75,15 +80,16 @@ export default function LinksTab({ data, setData }: Props) {
             onClick={() => fileRef.current?.click()}
             className="group relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-[#8129d9] to-[#ff3d81] ring-4 ring-neutral-100"
             title="Upload photo"
+            aria-label={data.profile.avatar ? 'Change profile photo' : 'Upload profile photo'}
           >
             {data.profile.avatar ? (
-              <img src={data.profile.avatar} alt="avatar" className="h-full w-full object-cover" />
+              <img src={data.profile.avatar} alt="" className="h-full w-full object-cover" />
             ) : (
               <span className="text-2xl font-bold text-white">
                 {data.profile.name.slice(0, 1).toUpperCase() || '?'}
               </span>
             )}
-            <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 transition group-hover:opacity-100">
+            <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
               <FaCamera />
             </span>
           </button>
@@ -104,12 +110,14 @@ export default function LinksTab({ data, setData }: Props) {
             <input
               className="input"
               placeholder="Display name"
+              aria-label="Display name"
               value={data.profile.name}
               onChange={(e) => setData((d) => ({ ...d, profile: { ...d.profile, name: e.target.value } }))}
             />
             <input
               className="input"
               placeholder="@handle"
+              aria-label="Handle"
               value={data.profile.handle}
               onChange={(e) => setData((d) => ({ ...d, profile: { ...d.profile, handle: e.target.value } }))}
             />
@@ -128,10 +136,11 @@ export default function LinksTab({ data, setData }: Props) {
           rows={3}
           maxLength={160}
           placeholder="Bio"
+          aria-label="Bio"
           value={data.profile.bio}
           onChange={(e) => setData((d) => ({ ...d, profile: { ...d.profile, bio: e.target.value } }))}
         />
-        <p className="mt-1 text-right text-[11px] text-neutral-400">{data.profile.bio.length}/160</p>
+        <p className="mt-1 text-right text-[11px] text-neutral-500">{data.profile.bio.length}/160</p>
       </Card>
 
       {/* Add link */}
@@ -198,8 +207,9 @@ export default function LinksTab({ data, setData }: Props) {
                     setDragId(null);
                     setOverId(null);
                   }}
-                  className="flex cursor-grab items-center text-neutral-400 hover:text-neutral-700 active:cursor-grabbing"
+                  className="flex cursor-grab items-center text-neutral-500 hover:text-neutral-700 active:cursor-grabbing"
                   title="Drag to reorder"
+                  aria-hidden
                 >
                   <FaGripVertical />
                 </div>
@@ -212,6 +222,7 @@ export default function LinksTab({ data, setData }: Props) {
                         thumbRef.current?.click();
                       }}
                       title="Add an image to this button"
+                      aria-label={`${l.image ? 'Change' : 'Add'} image for ${l.title || 'this link'}`}
                       className="group relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-neutral-100 text-lg"
                     >
                       {l.image ? (
@@ -219,41 +230,49 @@ export default function LinksTab({ data, setData }: Props) {
                       ) : (
                         l.emoji || <Icon />
                       )}
-                      <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-xs text-white opacity-0 transition group-hover:opacity-100">
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-xs text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
                         <FaImage />
                       </span>
                     </button>
                     <input
                       className="input !font-semibold"
                       placeholder="Title (e.g. My Dribbble)"
+                      aria-label="Link title"
+                      autoFocus={focusId === l.id}
                       value={l.title}
                       onChange={(e) => updateLink(l.id, { title: e.target.value })}
                     />
                   </div>
                   <input
                     className="input"
+                    type="url"
+                    inputMode="url"
                     placeholder="https://your-link.com"
+                    aria-label={`URL for ${l.title || 'this link'}`}
                     value={l.url}
                     onChange={(e) => updateLink(l.id, { url: e.target.value })}
                   />
+                  {l.title.trim() && !l.url.trim() && (
+                    <p className="text-xs font-medium text-amber-700">Add a URL so this link opens somewhere.</p>
+                  )}
                 </div>
 
                 <div className="flex flex-col items-center justify-between gap-2">
-                  <Toggle checked={l.enabled} onChange={(v) => updateLink(l.id, { enabled: v })} label="Show link" />
+                  <Toggle checked={l.enabled} onChange={(v) => updateLink(l.id, { enabled: v })} label={`Show ${l.title || 'link'} on your page`} />
                   <div className="flex flex-col">
                     <button
                       disabled={idx === 0}
                       onClick={() => move(l.id, -1)}
-                      className="p-1 text-neutral-400 hover:text-neutral-900 disabled:opacity-25"
-                      aria-label="Move up"
+                      className="flex h-7 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-25 disabled:hover:bg-transparent"
+                      aria-label={`Move ${l.title || 'link'} up`}
                     >
                       <FaChevronUp />
                     </button>
                     <button
                       disabled={idx === data.links.length - 1}
                       onClick={() => move(l.id, 1)}
-                      className="p-1 text-neutral-400 hover:text-neutral-900 disabled:opacity-25"
-                      aria-label="Move down"
+                      className="flex h-7 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-25 disabled:hover:bg-transparent"
+                      aria-label={`Move ${l.title || 'link'} down`}
                     >
                       <FaChevronDown />
                     </button>
@@ -269,8 +288,9 @@ export default function LinksTab({ data, setData }: Props) {
                   value={l.emoji}
                   onChange={(e) => updateLink(l.id, { emoji: e.target.value })}
                   title="Optional emoji icon"
+                  aria-label="Emoji icon (optional)"
                 />
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-1" role="group" aria-label="Button animation">
                   {ANIMS.map((a) => (
                     <Chip key={a.id} active={l.animation === a.id} onClick={() => updateLink(l.id, { animation: a.id })}>
                       {a.label}
@@ -279,6 +299,7 @@ export default function LinksTab({ data, setData }: Props) {
                 </div>
                 <button
                   onClick={() => setOpenStyle(styleOpen ? null : l.id)}
+                  aria-expanded={styleOpen}
                   className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
                     styleOpen ? 'bg-[#8129d9] text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                   }`}
@@ -292,8 +313,8 @@ export default function LinksTab({ data, setData }: Props) {
                     if (confirm(`Delete "${l.title || 'this link'}"?`))
                       setData((d) => ({ ...d, links: d.links.filter((x) => x.id !== l.id) }));
                   }}
-                  className="ml-auto rounded-full p-2 text-neutral-400 transition hover:bg-red-50 hover:text-red-600"
-                  aria-label="Delete link"
+                  className="ml-auto flex h-9 w-9 items-center justify-center rounded-full text-neutral-500 transition hover:bg-red-50 hover:text-red-600"
+                  aria-label={`Delete ${l.title || 'link'}`}
                 >
                   <FaTrash />
                 </button>
@@ -311,6 +332,8 @@ export default function LinksTab({ data, setData }: Props) {
                           key={c || 'default'}
                           onClick={() => updateLink(l.id, { color: c })}
                           title={c || 'Use theme colour'}
+                          aria-label={c ? `Button colour ${c}` : 'Use theme colour'}
+                          aria-pressed={l.color === c}
                           className={`h-7 w-7 rounded-full ring-2 transition hover:scale-110 ${
                             l.color === c ? 'ring-[#8129d9]' : 'ring-black/10'
                           }`}
@@ -330,6 +353,7 @@ export default function LinksTab({ data, setData }: Props) {
                         onChange={(e) => updateLink(l.id, { color: e.target.value })}
                         className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent p-0"
                         title="Pick any colour"
+                        aria-label="Custom button colour"
                       />
                     </div>
                   </div>
@@ -339,6 +363,7 @@ export default function LinksTab({ data, setData }: Props) {
                       type="color"
                       value={l.textColor || '#111111'}
                       onChange={(e) => updateLink(l.id, { textColor: e.target.value })}
+                      aria-label="Button text colour"
                       className="h-7 w-9 cursor-pointer rounded border-0 bg-transparent p-0"
                     />
                     <button

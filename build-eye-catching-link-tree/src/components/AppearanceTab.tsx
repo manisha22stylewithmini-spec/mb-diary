@@ -42,12 +42,14 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
         <input
           className="w-20 bg-transparent text-right text-xs font-mono uppercase text-neutral-500 outline-none"
           value={value}
+          aria-label={`${label} hex code`}
           onChange={(e) => onChange(e.target.value)}
         />
         <input
           type="color"
           value={/^#[0-9a-f]{6}$/i.test(value) ? value : '#ffffff'}
           onChange={(e) => onChange(e.target.value)}
+          aria-label={`${label} colour picker`}
           className="h-8 w-9 cursor-pointer rounded border-0 bg-transparent p-0"
         />
       </span>
@@ -76,7 +78,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
           {THEMES.map((t) => {
             const active = design.theme === t.id;
             return (
-              <button key={t.id} onClick={() => set({ theme: t.id })} className="group text-left">
+              <button key={t.id} onClick={() => set({ theme: t.id })} aria-pressed={active} className="group rounded-2xl text-left">
                 <div
                   className={`relative flex aspect-[3/4] flex-col items-center justify-center gap-1.5 overflow-hidden rounded-2xl p-3 transition group-hover:scale-[1.04] ${
                     active ? 'ring-4 ring-[#8129d9] ring-offset-2' : 'ring-1 ring-black/10'
@@ -99,7 +101,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
           })}
 
           {/* Custom theme tile */}
-          <button onClick={() => set({ theme: 'custom' })} className="group text-left">
+          <button onClick={() => set({ theme: 'custom' })} aria-pressed={design.theme === 'custom'} className="group rounded-2xl text-left">
             <div
               className={`relative flex aspect-[3/4] flex-col items-center justify-center gap-1.5 overflow-hidden rounded-2xl p-3 transition group-hover:scale-[1.04] ${
                 design.theme === 'custom' ? 'ring-4 ring-[#8129d9] ring-offset-2' : 'ring-1 ring-black/10'
@@ -151,7 +153,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
               onChange={(e) => setCustom({ angle: Number(e.target.value) })}
               className="flex-1 accent-[#8129d9]"
             />
-            <span className="w-10 text-right font-mono text-neutral-400">{design.custom.angle}°</span>
+            <span className="w-10 text-right font-mono text-neutral-500">{design.custom.angle}°</span>
           </label>
           <span className="flex items-center gap-2 text-xs font-semibold text-neutral-600">
             Animate
@@ -169,6 +171,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
               <button
                 key={k.id}
                 onClick={() => setBg({ kind: k.id })}
+                aria-pressed={bg.kind === k.id}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
                   bg.kind === k.id ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
@@ -233,16 +236,18 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
 
             <input
               className="input"
+              type="url"
+              aria-label={`Background ${bg.kind} URL`}
               placeholder={bg.kind === 'video' ? 'https://…/clip.mp4' : 'https://…/photo.jpg'}
               value={bg.src.startsWith('data:') ? '' : bg.src}
               onChange={(e) => setBg({ src: e.target.value })}
             />
             {bg.src.startsWith('data:') && (
-              <p className="text-[11px] text-neutral-400">Using an uploaded file. Paste a URL above to replace it.</p>
+              <p className="text-[11px] text-neutral-500">Using an uploaded file. Paste a URL above to replace it.</p>
             )}
 
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Effect</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Effect</p>
               <div className="flex flex-wrap gap-2">
                 {BLUR_PRESETS.map((b) => (
                   <Chip key={b.v} active={bg.blur === b.v} onClick={() => setBg({ blur: b.v })}>
@@ -265,7 +270,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
                 onChange={(e) => setBg({ blur: Number(e.target.value) })}
                 className="flex-1 accent-[#8129d9]"
               />
-              <span className="w-10 text-right font-mono text-neutral-400">{bg.blur}px</span>
+              <span className="w-10 text-right font-mono text-neutral-500">{bg.blur}px</span>
             </label>
             <label className="flex items-center gap-3 text-xs font-semibold text-neutral-600">
               Dark overlay
@@ -277,14 +282,14 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
                 onChange={(e) => setBg({ dim: Number(e.target.value) })}
                 className="flex-1 accent-[#8129d9]"
               />
-              <span className="w-10 text-right font-mono text-neutral-400">{bg.dim}%</span>
+              <span className="w-10 text-right font-mono text-neutral-500">{bg.dim}%</span>
             </label>
           </div>
         )}
       </Card>
 
       <Card title="Buttons">
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Style</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Style</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {STYLES.map((s) => (
             <Chip key={s.id} active={design.buttonStyle === s.id} onClick={() => set({ buttonStyle: s.id })}>
@@ -292,7 +297,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
             </Chip>
           ))}
         </div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-400">Corners</p>
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Corners</p>
         <div className="flex flex-wrap gap-2">
           {SHAPES.map((s) => (
             <Chip key={s.id} active={design.shape === s.id} onClick={() => set({ shape: s.id })}>
@@ -300,7 +305,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
             </Chip>
           ))}
         </div>
-        <p className="mt-3 text-[11px] text-neutral-400">
+        <p className="mt-3 text-[11px] text-neutral-500">
           Tip: give any single button its own colour or image from the <b>Style</b> button on the Links tab.
         </p>
       </Card>
@@ -311,6 +316,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
             <button
               key={f.id}
               onClick={() => set({ font: f.id })}
+              aria-pressed={design.font === f.id}
               style={{ fontFamily: f.css }}
               className={`rounded-2xl border-2 px-3 py-3 text-base transition ${
                 design.font === f.id ? 'border-[#8129d9] bg-purple-50' : 'border-neutral-200 hover:border-neutral-400'

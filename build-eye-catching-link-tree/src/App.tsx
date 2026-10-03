@@ -4,8 +4,6 @@ import {
   FaPalette,
   FaShareNodes,
   FaArrowUpRightFromSquare,
-  FaDownload,
-  FaUpload,
   FaPen,
   FaMobileScreen,
 } from 'react-icons/fa6';
@@ -44,7 +42,6 @@ export default function App() {
   const [showShare, setShowShare] = useState(false);
   const [mobilePreview, setMobilePreview] = useState(false);
   const [toast, setToast] = useState('');
-  const importRef = useRef<HTMLInputElement>(null);
   const counted = useRef(false);
 
   const notify = useCallback((msg: string) => {
@@ -72,27 +69,6 @@ export default function App() {
 
   const liveUrl = `${window.location.origin}${window.location.pathname}#live`;
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'link-forest-backup.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
-    notify('Backup downloaded');
-  };
-
-  const importJson = async (file: File) => {
-    try {
-      const parsed = JSON.parse(await file.text()) as AppData;
-      if (!parsed.profile || !Array.isArray(parsed.links)) throw new Error('bad');
-      setData((d) => ({ ...d, ...parsed }));
-      notify('Backup restored');
-    } catch {
-      notify('Invalid backup file');
-    }
-  };
-
   /* ---------------- Live (public) view ---------------- */
   if (live) {
     return (
@@ -105,6 +81,7 @@ export default function App() {
           }}
           className="fixed bottom-4 right-4 z-50 flex h-11 w-11 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur transition hover:scale-110 hover:bg-black/70"
           title="Back to editor"
+          aria-label="Back to editor"
         >
           <FaPen />
         </a>
@@ -126,15 +103,16 @@ export default function App() {
             </span>
           </div>
 
-          <nav className="mx-auto flex gap-1 rounded-full bg-neutral-100 p-1">
+          <nav aria-label="Editor sections" className="mx-auto flex gap-1 rounded-full bg-neutral-100 p-1">
             {TABS.map((t) => {
               const Icon = t.icon;
               return (
                 <button
                   key={t.id}
                   onClick={() => setTab(t.id)}
+                  aria-current={tab === t.id ? 'page' : undefined}
                   className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition sm:px-6 ${
-                    tab === t.id ? 'bg-white text-neutral-900 shadow' : 'text-neutral-500 hover:text-neutral-900'
+                    tab === t.id ? 'bg-white text-neutral-900 shadow' : 'text-neutral-600 hover:text-neutral-900'
                   }`}
                 >
                   <Icon className="text-xs" />
@@ -146,35 +124,10 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={exportJson}
-              title="Download backup"
-              className="hidden h-10 w-10 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 md:flex"
-            >
-              <FaDownload />
-            </button>
-            <button
-              onClick={() => importRef.current?.click()}
-              title="Restore backup"
-              className="hidden h-10 w-10 items-center justify-center rounded-full text-neutral-600 hover:bg-neutral-100 md:flex"
-            >
-              <FaUpload />
-            </button>
-            <input
-              ref={importRef}
-              type="file"
-              accept="application/json"
-              hidden
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) importJson(f);
-                e.target.value = '';
-              }}
-            />
-            <button
               onClick={() => setShowShare(true)}
-              className="flex items-center gap-2 rounded-full bg-[#d2e823] px-4 py-2.5 text-sm font-bold text-neutral-900 shadow transition hover:scale-105 active:scale-95"
+              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#19c37d] via-[#00b3a4] to-[#8129d9] px-4 py-2.5 text-sm font-bold text-white shadow transition hover:scale-105 active:scale-95"
             >
-              <FaShareNodes /> <span className="hidden sm:inline">Share</span>
+              <FaShareNodes aria-hidden /> <span className="sr-only sm:not-sr-only">Share</span>
             </button>
           </div>
         </div>
@@ -233,11 +186,13 @@ export default function App() {
         />
       )}
 
-      {toast && (
-        <div className="pop-in fixed left-1/2 top-20 z-[60] -translate-x-1/2 rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white shadow-xl">
-          {toast}
-        </div>
-      )}
+      <div role="status" aria-live="polite" className="pointer-events-none fixed left-1/2 top-20 z-[60] -translate-x-1/2">
+        {toast && (
+          <div className="pop-in rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white shadow-xl">
+            {toast}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

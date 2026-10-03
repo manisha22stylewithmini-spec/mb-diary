@@ -71,21 +71,23 @@ export default function SocialsCard({ data, setData }: Props) {
               } ${dragId === s.id ? 'opacity-40' : ''}`}
             >
               <span
-                className="cursor-grab px-1 text-neutral-300 hover:text-neutral-600 active:cursor-grabbing"
+                className="cursor-grab px-1 text-neutral-500 hover:text-neutral-600 active:cursor-grabbing"
                 title="Drag to reorder"
+                aria-hidden
               >
                 <FaGripVertical />
               </span>
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg text-white"
                 style={{ background: p.color }}
-                title={p.label}
+                aria-hidden
               >
                 <Icon />
               </span>
               <input
                 className="input"
                 placeholder={`${p.label} link`}
+                aria-label={`${p.label} link`}
                 value={s.url}
                 onChange={(e) =>
                   setData((d) => ({
@@ -96,7 +98,7 @@ export default function SocialsCard({ data, setData }: Props) {
               />
               <button
                 onClick={() => setData((d) => ({ ...d, socials: d.socials.filter((x) => x.id !== s.id) }))}
-                className="rounded-full p-2 text-neutral-400 hover:bg-red-50 hover:text-red-600"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-500 hover:bg-red-50 hover:text-red-600"
                 aria-label={`Remove ${p.label}`}
               >
                 <FaXmark />
@@ -105,7 +107,7 @@ export default function SocialsCard({ data, setData }: Props) {
           );
         })}
         {data.socials.length === 0 && (
-          <p className="rounded-2xl bg-neutral-50 p-4 text-center text-sm text-neutral-400">
+          <p className="rounded-2xl bg-neutral-50 p-4 text-center text-sm text-neutral-500">
             No social icons yet — add one below.
           </p>
         )}
@@ -115,6 +117,7 @@ export default function SocialsCard({ data, setData }: Props) {
       <div className="mt-4 overflow-hidden rounded-2xl bg-neutral-50 ring-1 ring-black/5">
         <button
           onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
           className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-neutral-100"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#19c37d] text-xs text-white">
@@ -126,23 +129,24 @@ export default function SocialsCard({ data, setData }: Props) {
               {available.length} available{used.size > 0 ? ` · ${used.size} added` : ''}
             </span>
           </span>
-          <FaChevronDown className={`text-neutral-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+          <FaChevronDown className={`text-neutral-500 transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
 
         {open && (
           <div className="pop-in border-t border-neutral-200 p-4">
             <div className="relative mb-3">
-              <FaMagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-neutral-400" />
+              <FaMagnifyingGlass className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-neutral-500" />
               <input
                 className="input !pl-8"
                 placeholder="Search platforms…"
+                aria-label="Search platforms"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
 
             {available.length === 0 ? (
-              <p className="py-3 text-center text-sm text-neutral-400">
+              <p className="py-3 text-center text-sm text-neutral-500">
                 {query ? 'No platform matches that search.' : 'All platforms added 🎉'}
               </p>
             ) : (

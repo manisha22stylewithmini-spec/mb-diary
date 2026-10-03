@@ -44,7 +44,7 @@ export default function Footer() {
           </a>
         </div>
       </div>
-      <p className="pb-24 text-center text-[11px] text-neutral-400 lg:pb-6">
+      <p className="pb-24 text-center text-[11px] text-neutral-600 lg:pb-6">
         © {new Date().getFullYear()} Link Forest · Made with care for personal use
       </p>
     </footer>

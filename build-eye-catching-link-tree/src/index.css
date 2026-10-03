@@ -129,5 +129,25 @@ body {
   box-shadow: 0 0 0 3px rgba(129, 41, 217, 0.15);
 }
 
+.input::placeholder { color: #737373; }
+
+/* ---------- Accessibility ---------- */
+:where(button, a, summary, [role='switch'], input[type='color'], input[type='range']):focus-visible {
+  outline: 3px solid #8129d9;
+  outline-offset: 2px;
+}
+/* on the public page the theme text colour is the one guaranteed to contrast with the background */
+[data-profile] :focus-visible { outline-color: var(--page-text); }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: rgba(120, 120, 120, 0.35); border-radius: 9999px; }

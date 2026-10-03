@@ -25,7 +25,7 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${checked ? 'bg-[#8129d9]' : 'bg-neutral-300'}`}
+      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors before:absolute before:-inset-2.5 before:content-[''] ${checked ? 'bg-[#8129d9]' : 'bg-neutral-400'}`}
     >
       <span
         className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`}
@@ -38,8 +38,9 @@ export function Chip({ active, onClick, children }: { active: boolean; onClick: 
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
-      className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+      className={`rounded-full px-3.5 py-2 text-xs font-semibold transition ${
         active ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
       }`}
     >
