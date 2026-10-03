@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f3f3f1;
+  color: #111;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Animated backgrounds ---------- */
+.bg-animated {
+  background-size: 300% 300% !important;
+  animation: gradientShift 14s ease infinite;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  opacity: 0.45;
+  pointer-events: none;
+  animation: floaty 12s ease-in-out infinite;
+}
+@keyframes floaty {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.15); }
+  66% { transform: translate(-30px, 30px) scale(0.9); }
+}
+
+/* ---------- Entrance ---------- */
+.fade-up {
+  opacity: 0;
+  animation: fadeUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ---------- Avatar ring ---------- */
+.avatar-ring {
+  background: conic-gradient(from 0deg, var(--accent), #ff3d81, #7c4dff, #00e5ff, var(--accent));
+  animation: spin 6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Link button ---------- */
+.link-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s, filter 0.25s;
+}
+.link-btn:hover { transform: translateY(-3px) scale(1.025); filter: brightness(1.05); }
+.link-btn:active { transform: scale(0.97); }
+.link-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  transition: none;
+}
+.link-btn:hover::after { left: 130%; transition: left 0.7s ease; }
+
+.anim-pulse { animation: pulseAnim 1.8s ease-in-out infinite; }
+@keyframes pulseAnim {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+.anim-shake { animation: shakeAnim 3s ease-in-out infinite; }
+@keyframes shakeAnim {
+  0%, 80%, 100% { transform: translateX(0) rotate(0); }
+  84% { transform: translateX(-6px) rotate(-1deg); }
+  88% { transform: translateX(6px) rotate(1deg); }
+  92% { transform: translateX(-5px) rotate(-1deg); }
+  96% { transform: translateX(5px) rotate(1deg); }
+}
+.anim-bounce { animation: bounceAnim 2.2s ease-in-out infinite; }
+@keyframes bounceAnim {
+  0%, 60%, 100% { transform: translateY(0); }
+  70% { transform: translateY(-9px); }
+  80% { transform: translateY(0); }
+  90% { transform: translateY(-4px); }
+}
+.anim-glow { animation: glowAnim 2s ease-in-out infinite; }
+@keyframes glowAnim {
+  0%, 100% { box-shadow: 0 0 0 0 transparent, 0 8px 24px -8px rgba(0, 0, 0, 0.35); }
+  50% { box-shadow: 0 0 22px 4px var(--accent), 0 8px 24px -8px rgba(0, 0, 0, 0.35); }
+}
+
+.social-btn { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.social-btn:hover { transform: translateY(-4px) scale(1.15) rotate(-6deg); }
+
+/* ---------- Editor bits ---------- */
+.pop-in { animation: popIn 0.25s ease-out; }
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1.5px solid #e4e4e0;
+  background: #fafaf8;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+.input:focus {
+  border-color: #8129d9;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(129, 41, 217, 0.15);
+}
+
+.input::placeholder { color: #737373; }
+
+/* ---------- Accessibility ---------- */
+:where(button, a, summary, [role='switch'], input[type='color'], input[type='range']):focus-visible {
+  outline: 3px solid #8129d9;
+  outline-offset: 2px;
+}
+/* on the public page the theme text colour is the one guaranteed to contrast with the background */
+[data-profile] :focus-visible { outline-color: var(--page-text); }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(120, 120, 120, 0.35); border-radius: 9999px; }
