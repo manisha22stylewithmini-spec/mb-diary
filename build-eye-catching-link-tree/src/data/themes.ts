@@ -11,9 +11,39 @@ export interface Theme {
   btnBg: string;
   btnText: string;
   accent: string;
+  /** optional avatar-ring gradient (defaults to the rainbow ring) */
+  ring?: string;
+  /** floating colour blobs behind the page (default on) */
+  blobs?: boolean;
 }
 
 export const THEMES: Theme[] = [
+  // ---- Brand themes: one per share-link type, built from the Link Forest palette ----
+  {
+    id: 'executive',
+    name: 'Executive',
+    bg: 'linear-gradient(180deg,#ffffff,#e8eef5)',
+    animated: false,
+    dark: false,
+    text: '#0f172a',
+    btnBg: '#0f172a',
+    btnText: '#ffffff',
+    accent: '#0a8456',
+    ring: 'conic-gradient(from 0deg,#0a8456,#00857a,#8129d9,#0a8456)',
+    blobs: false,
+  },
+  {
+    id: 'studio',
+    name: 'Studio',
+    bg: 'linear-gradient(135deg,#08744c,#00706a,#5b21b6,#08744c)',
+    animated: true,
+    dark: true,
+    text: '#ffffff',
+    btnBg: '#ffffff',
+    btnText: '#1a1033',
+    accent: '#ffe14d',
+    ring: 'conic-gradient(from 0deg,#ffe14d,#19c37d,#8129d9,#ffe14d)',
+  },
   {
     id: 'aurora',
     name: 'Aurora',

@@ -1,6 +1,8 @@
 import { useRef } from 'react';
 import { FaCheck, FaImage, FaVideo, FaWandMagicSparkles, FaTrash, FaUpload } from 'react-icons/fa6';
-import type { AppData, BgKind, ButtonStyle, Shape } from '../types';
+import type { AppData, BgKind, ButtonStyle, Mode, Shape } from '../types';
+import { MODE_META } from '../data/modes';
+import { patchDesign } from '../data/store';
 import { FONTS, THEMES, buttonStyle, resolveTheme } from '../data/themes';
 import { fileToDataUrl, resizeCover } from '../utils/media';
 import { Card, Chip, Toggle } from './ui';
@@ -9,6 +11,8 @@ interface Props {
   data: AppData;
   setData: (fn: (d: AppData) => AppData) => void;
   notify: (msg: string) => void;
+  /** which page (Professional / Freelance) is being styled */
+  mode: Mode;
 }
 
 const STYLES: { id: ButtonStyle; label: string }[] = [
@@ -57,23 +61,23 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
   );
 }
 
-export default function AppearanceTab({ data, setData, notify }: Props) {
-  const { design } = data;
+export default function AppearanceTab({ data, setData, notify, mode }: Props) {
+  const design = data.modes[mode].design;
   const bg = design.background;
   const imgRef = useRef<HTMLInputElement>(null);
   const vidRef = useRef<HTMLInputElement>(null);
 
-  const set = (patch: Partial<typeof design>) => setData((d) => ({ ...d, design: { ...d.design, ...patch } }));
+  const set = (patch: Partial<typeof design>) => setData((d) => patchDesign(d, mode, (x) => ({ ...x, ...patch })));
   const setCustom = (patch: Partial<typeof design.custom>) =>
-    setData((d) => ({ ...d, design: { ...d.design, theme: 'custom', custom: { ...d.design.custom, ...patch } } }));
+    setData((d) => patchDesign(d, mode, (x) => ({ ...x, theme: 'custom', custom: { ...x.custom, ...patch } })));
   const setBg = (patch: Partial<typeof bg>) =>
-    setData((d) => ({ ...d, design: { ...d.design, background: { ...d.design.background, ...patch } } }));
+    setData((d) => patchDesign(d, mode, (x) => ({ ...x, background: { ...x.background, ...patch } })));
 
   const preview = resolveTheme(design);
 
   return (
     <div className="space-y-5">
-      <Card title="Themes" subtitle="Pick a ready-made vibe, or build your own below">
+      <Card title="Themes" subtitle={`Styling your ${MODE_META[mode].label} page — pick a ready-made vibe, or build your own below`}>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {THEMES.map((t) => {
             const active = design.theme === t.id;
@@ -173,7 +177,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
                 onClick={() => setBg({ kind: k.id })}
                 aria-pressed={bg.kind === k.id}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition ${
-                  bg.kind === k.id ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                  bg.kind === k.id ? 'btn-brand' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                 }`}
               >
                 <Icon /> {k.label}
@@ -187,7 +191,7 @@ export default function AppearanceTab({ data, setData, notify }: Props) {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => (bg.kind === 'image' ? imgRef.current : vidRef.current)?.click()}
-                className="flex items-center gap-2 rounded-full bg-[#8129d9] px-4 py-2.5 text-xs font-bold text-white transition hover:bg-[#6f1fc0]"
+                className="btn-brand flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold"
               >
                 <FaUpload /> Upload {bg.kind}
               </button>

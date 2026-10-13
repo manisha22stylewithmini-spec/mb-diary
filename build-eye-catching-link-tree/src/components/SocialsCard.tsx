@@ -120,7 +120,7 @@ export default function SocialsCard({ data, setData }: Props) {
           aria-expanded={open}
           className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-neutral-100"
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#19c37d] text-xs text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-deep text-xs text-white">
             <FaPlus />
           </span>
           <span className="flex-1">

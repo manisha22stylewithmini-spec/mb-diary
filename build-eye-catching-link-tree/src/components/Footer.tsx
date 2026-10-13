@@ -13,7 +13,7 @@ export default function Footer() {
           </div>
           <div>
             <p className="text-sm font-extrabold tracking-tight">
-              Link<span className="text-[#19c37d]">Forest</span>
+              Link<span className="text-brand">Forest</span>
             </p>
             <p className="text-[11px] text-neutral-500">All your links, growing in one place.</p>
           </div>
@@ -26,17 +26,17 @@ export default function Footer() {
               href={LINKEDIN_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-bold text-neutral-900 underline decoration-[#19c37d] decoration-2 underline-offset-4 transition hover:text-[#19c37d]"
+              className="font-bold text-neutral-900 underline decoration-brand-deep decoration-2 underline-offset-4 transition hover:text-brand-deep"
             >
               Manisha Baroliya
             </a>
-            <FaHeart className="text-xs text-[#ff3d81]" />
+            <FaHeart className="text-xs text-brand-purple" aria-hidden />
           </p>
           <a
             href={LINKEDIN_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-[#0A66C2] to-[#1769ff] px-4 py-2 text-xs font-bold text-white shadow-md transition hover:scale-105"
+            className="btn-brand group flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-md hover:scale-105"
           >
             <FaLinkedin className="text-sm" />
             Know me more on LinkedIn

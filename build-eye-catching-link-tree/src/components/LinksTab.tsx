@@ -9,9 +9,10 @@ import {
   FaImage,
   FaPalette,
 } from 'react-icons/fa6';
-import type { Animation, AppData, LinkItem } from '../types';
+import type { Animation, Audience, AppData, LinkItem, Mode } from '../types';
+import { MODE_META } from '../data/modes';
 import { PLATFORMS, detectPlatform } from '../data/platforms';
-import { makeLink } from '../data/store';
+import { makeLink, patchMode } from '../data/store';
 import { resizeImage } from '../utils/media';
 import SocialsCard from './SocialsCard';
 import { Card, Chip, Toggle } from './ui';
@@ -19,7 +20,15 @@ import { Card, Chip, Toggle } from './ui';
 interface Props {
   data: AppData;
   setData: (fn: (d: AppData) => AppData) => void;
+  /** which page (Professional / Freelance) is being edited */
+  mode: Mode;
 }
+
+const AUDIENCES: { id: Audience; label: string }[] = [
+  { id: 'both', label: 'Both pages' },
+  { id: 'pro', label: 'Professional' },
+  { id: 'freelance', label: 'Freelance' },
+];
 
 const ANIMS: { id: Animation; label: string }[] = [
   { id: 'none', label: 'None' },
@@ -31,7 +40,9 @@ const ANIMS: { id: Animation; label: string }[] = [
 
 const SWATCHES = ['', '#ffffff', '#111111', '#8129d9', '#ff3d81', '#ff8a00', '#19c37d', '#00b3a4', '#1769ff', '#ffe14d'];
 
-export default function LinksTab({ data, setData }: Props) {
+export default function LinksTab({ data, setData, mode }: Props) {
+  const settings = data.modes[mode];
+  const meta = MODE_META[mode];
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const [openStyle, setOpenStyle] = useState<string | null>(null);
@@ -73,7 +84,7 @@ export default function LinksTab({ data, setData }: Props) {
   return (
     <div className="space-y-5">
       {/* Profile */}
-      <Card title="Profile" subtitle="This is what visitors see at the top of your page">
+      <Card title="Profile" subtitle={`Name, handle and photo are shared — bio and status are for your ${meta.label} page`}>
         <div className="flex items-center gap-4">
           <button
             type="button"
@@ -136,17 +147,25 @@ export default function LinksTab({ data, setData }: Props) {
           rows={3}
           maxLength={160}
           placeholder="Bio"
-          aria-label="Bio"
-          value={data.profile.bio}
-          onChange={(e) => setData((d) => ({ ...d, profile: { ...d.profile, bio: e.target.value } }))}
+          aria-label={`Bio for your ${meta.label} page`}
+          value={settings.bio}
+          onChange={(e) => setData((d) => patchMode(d, mode, { bio: e.target.value }))}
         />
-        <p className="mt-1 text-right text-[11px] text-neutral-500">{data.profile.bio.length}/160</p>
+        <p className="mt-1 text-right text-[11px] text-neutral-500">{settings.bio.length}/160</p>
+        <input
+          className="input mt-2"
+          maxLength={40}
+          placeholder="Status badge, e.g. Open to opportunities"
+          aria-label={`Status badge for your ${meta.label} page`}
+          value={settings.badge}
+          onChange={(e) => setData((d) => patchMode(d, mode, { badge: e.target.value }))}
+        />
       </Card>
 
       {/* Add link */}
       <button
         onClick={addLink}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-[#8129d9] py-3.5 text-sm font-bold text-white shadow-lg shadow-purple-300/50 transition hover:scale-[1.01] hover:bg-[#6f1fc0] active:scale-[0.98]"
+        className="btn-brand flex w-full items-center justify-center gap-2 rounded-full py-3.5 text-sm font-bold shadow-lg shadow-purple-300/50 hover:scale-[1.01] active:scale-[0.98]"
       >
         <FaPlus /> Add link
       </button>
@@ -280,7 +299,25 @@ export default function LinksTab({ data, setData }: Props) {
                 </div>
               </div>
 
-              <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-3 pl-7">
+              <div
+                className="mt-3 flex flex-wrap items-center gap-2 border-t border-neutral-100 pt-3 pl-7"
+                role="group"
+                aria-label={`Which page shows ${l.title || 'this link'}`}
+              >
+                <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Show on</span>
+                {AUDIENCES.map((a) => (
+                  <Chip key={a.id} active={l.audience === a.id} onClick={() => updateLink(l.id, { audience: a.id })}>
+                    {a.label}
+                  </Chip>
+                ))}
+                {l.audience !== 'both' && l.audience !== mode && (
+                  <span className="text-[11px] font-medium text-amber-700">
+                    Not on the {meta.label} page — switch page type above to preview it
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2 pl-7">
                 <input
                   className="input !w-16 text-center"
                   placeholder="😀"
@@ -301,7 +338,7 @@ export default function LinksTab({ data, setData }: Props) {
                   onClick={() => setOpenStyle(styleOpen ? null : l.id)}
                   aria-expanded={styleOpen}
                   className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
-                    styleOpen ? 'bg-[#8129d9] text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                    styleOpen ? 'btn-brand' : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
                   }`}
                 >
                   <FaPalette /> Style

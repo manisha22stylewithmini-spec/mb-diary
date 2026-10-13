@@ -1,5 +1,39 @@
 @import "tailwindcss";
 
+/* ---------- Brand tokens (single source of truth, mirrors the logo) ---------- */
+@theme {
+  --color-brand-green: #19c37d;
+  --color-brand-deep: #0a8456; /* green deep enough for white text (4.7:1) */
+  --color-brand-teal: #00857a;
+  --color-brand-purple: #8129d9;
+  --color-brand-ink: #1a1033;
+  --color-canvas: #f5f4f9;
+}
+
+:root {
+  --brand-gradient: linear-gradient(115deg, #0a8456 0%, #00857a 48%, #8129d9 100%);
+}
+
+/* filled brand surface: primary buttons, selected chips, active toggles */
+.bg-brand,
+.btn-brand {
+  background-image: var(--brand-gradient);
+}
+.btn-brand {
+  color: #fff;
+  transition: filter 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.btn-brand:hover {
+  filter: brightness(1.1);
+}
+/* gradient wordmark text */
+.text-brand {
+  background-image: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 html,
 body,
 #root {
@@ -9,7 +43,7 @@ body,
 body {
   margin: 0;
   font-family: 'Inter', system-ui, sans-serif;
-  background: #f3f3f1;
+  background: var(--color-canvas);
   color: #111;
   -webkit-font-smoothing: antialiased;
 }
@@ -105,6 +139,28 @@ body {
 
 .social-btn { transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
 .social-btn:hover { transform: translateY(-4px) scale(1.15) rotate(-6deg); }
+
+/* ---------- Music equaliser bars ---------- */
+.eq {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+}
+.eq i {
+  width: 3px;
+  height: 100%;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: bottom;
+  animation: eqBar 0.9s ease-in-out infinite;
+}
+.eq i:nth-child(2) { animation-delay: -0.3s; }
+.eq i:nth-child(3) { animation-delay: -0.6s; }
+@keyframes eqBar {
+  0%, 100% { transform: scaleY(0.25); }
+  50% { transform: scaleY(1); }
+}
 
 /* ---------- Editor bits ---------- */
 .pop-in { animation: popIn 0.25s ease-out; }
