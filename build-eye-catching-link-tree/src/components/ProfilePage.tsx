@@ -231,24 +231,25 @@ export default function ProfilePage({ data, view, onOpen }: Props) {
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onOpen?.(l)}
-                  className={`link-btn flex w-full items-center gap-3 py-2.5 pl-2.5 pr-5 text-[15px] font-semibold ${
+                  title={l.title}
+                  className={`link-btn flex w-full items-center gap-2.5 py-2 pl-2 pr-4 text-[15px] font-semibold ${
                     l.animation !== 'none' ? `anim-${l.animation}` : ''
                   }`}
                   style={linkStyle(theme, design, l)}
                 >
                   {l.image ? (
                     <span
-                      className="relative h-11 w-11 shrink-0 overflow-hidden"
+                      className="relative h-9 w-9 shrink-0 overflow-hidden"
                       style={{ borderRadius: radius === '9999px' ? '9999px' : '12px' }}
                     >
                       <Framed src={l.image} frame={l.imageFrame} />
                     </span>
                   ) : (
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center text-xl">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center text-lg">
                       {l.emoji ? l.emoji : <Icon />}
                     </span>
                   )}
-                  <span className="flex-1 text-center">{l.title}</span>
+                  <span className="min-w-0 flex-1 truncate whitespace-nowrap text-center">{l.title}</span>
                   <FaArrowUpRightFromSquare className="shrink-0 text-xs opacity-50" />
                 </a>
               </div>
