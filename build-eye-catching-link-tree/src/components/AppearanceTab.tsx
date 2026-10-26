@@ -1,11 +1,16 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FaCheck, FaImage, FaVideo, FaWandMagicSparkles, FaTrash, FaUpload } from 'react-icons/fa6';
 import type { AppData, BgKind, ButtonStyle, Mode, Shape } from '../types';
 import { MODE_META } from '../data/modes';
 import { patchDesign } from '../data/store';
 import { FONTS, THEMES, buttonStyle, resolveTheme } from '../data/themes';
-import { fileToDataUrl, resizeCover } from '../utils/media';
-import { Card, Chip, Toggle } from './ui';
+import { FaPalette, FaSliders, FaImage as FaPhoto, FaHandPointer, FaFont } from 'react-icons/fa6';
+import { AccordionFrame, AccordionSection, useOpenSection } from './Accordion';
+import { resizeCover } from '../utils/media';
+import { MAX_VIDEO_BYTES, fmtBytes, isLocalMedia, saveMedia, storageRoom, useMediaUrl } from '../utils/mediaStore';
+import FrameEditor from './FrameEditor';
+import { loadAllFonts } from '../utils/fonts';
+import { Chip, Toggle } from './ui';
 
 interface Props {
   data: AppData;
@@ -31,6 +36,8 @@ const BG_KINDS: { id: BgKind; label: string; icon: typeof FaImage }[] = [
   { id: 'image', label: 'Image', icon: FaImage },
   { id: 'video', label: 'Video', icon: FaVideo },
 ];
+const SECTIONS = ['themes', 'colours', 'background', 'buttons', 'font'] as const;
+
 const BLUR_PRESETS = [
   { v: 0, label: 'As it is' },
   { v: 4, label: 'Soft blur' },
@@ -66,6 +73,9 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
   const bg = design.background;
   const imgRef = useRef<HTMLInputElement>(null);
   const vidRef = useRef<HTMLInputElement>(null);
+  const [saving, setSaving] = useState(false);
+  const bgUrl = useMediaUrl(bg.src);
+  useEffect(loadAllFonts, []); // the Font section previews every typeface
 
   const set = (patch: Partial<typeof design>) => setData((d) => patchDesign(d, mode, (x) => ({ ...x, ...patch })));
   const setCustom = (patch: Partial<typeof design.custom>) =>
@@ -74,10 +84,20 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
     setData((d) => patchDesign(d, mode, (x) => ({ ...x, background: { ...x.background, ...patch } })));
 
   const preview = resolveTheme(design);
+  const [open, toggle] = useOpenSection('lf-design-open', SECTIONS, 'themes');
+  const sec = (id: (typeof SECTIONS)[number]) => ({ id, open: open === id, onToggle: () => toggle(id) });
+  const styleName = STYLES.find((s) => s.id === design.buttonStyle)?.label ?? '';
+  const shapeName = SHAPES.find((s) => s.id === design.shape)?.label ?? '';
+  const fontName = FONTS.find((f) => f.id === design.font)?.name ?? '';
 
   return (
-    <div className="space-y-5">
-      <Card title="Themes" subtitle={`Styling your ${MODE_META[mode].label} page — pick a ready-made vibe, or build your own below`}>
+    <AccordionFrame>
+      <AccordionSection
+        {...sec('themes')}
+        icon={<FaPalette />}
+        title="Themes"
+        summary={`${preview.name} · for your ${MODE_META[mode].label} page`}
+      >
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {THEMES.map((t) => {
             const active = design.theme === t.id;
@@ -124,18 +144,18 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
             <p className="mt-1.5 text-center text-xs font-semibold">Custom</p>
           </button>
         </div>
-      </Card>
+      </AccordionSection>
 
       {/* Custom colours */}
-      <Card
+      <AccordionSection
+        {...sec('colours')}
+        icon={<FaSliders />}
         title="Custom colours"
-        subtitle="Editing any colour switches your page to the Custom theme"
-        action={
-          <div
-            className="h-10 w-16 rounded-xl ring-1 ring-black/10"
-            style={{ background: preview.bg }}
-            title="Live preview"
-          />
+        summary={
+          <span className="inline-flex items-center gap-2 align-middle">
+            <span className="inline-block h-3.5 w-8 rounded-full ring-1 ring-black/10" style={{ background: preview.bg }} />
+            Editing any colour switches to the Custom theme
+          </span>
         }
       >
         <div className="grid gap-2 sm:grid-cols-2">
@@ -164,10 +184,15 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
             <Toggle checked={design.custom.animated} onChange={(v) => setCustom({ animated: v })} label="Animate gradient" />
           </span>
         </div>
-      </Card>
+      </AccordionSection>
 
       {/* Background media */}
-      <Card title="Background image / video" subtitle="Upload your own, or paste a direct link">
+      <AccordionSection
+        {...sec('background')}
+        icon={<FaPhoto />}
+        title="Background"
+        summary={bg.kind === 'theme' ? 'Theme only' : `${bg.kind === 'image' ? 'Image' : 'Video'}${bg.src ? ' added' : ' — not set yet'}`}
+      >
         <div className="mb-4 flex flex-wrap gap-2">
           {BG_KINDS.map((k) => {
             const Icon = k.icon;
@@ -191,13 +216,14 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => (bg.kind === 'image' ? imgRef.current : vidRef.current)?.click()}
-                className="btn-brand flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold"
+                disabled={saving}
+                className="btn-brand flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-bold disabled:opacity-60"
               >
-                <FaUpload /> Upload {bg.kind}
+                <FaUpload /> {saving ? 'Saving video…' : `Upload ${bg.kind}`}
               </button>
               {bg.src && (
                 <button
-                  onClick={() => setBg({ src: '' })}
+                  onClick={() => setBg({ src: '', frame: undefined })}
                   className="flex items-center gap-2 rounded-full bg-neutral-100 px-4 py-2.5 text-xs font-bold text-neutral-600 hover:bg-red-50 hover:text-red-600"
                 >
                   <FaTrash /> Remove
@@ -213,7 +239,7 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
               onChange={async (e) => {
                 const f = e.target.files?.[0];
                 if (f) {
-                  setBg({ src: await resizeCover(f), kind: 'image' });
+                  setBg({ src: await resizeCover(f), kind: 'image', frame: undefined });
                   notify('Background image added');
                 }
                 e.target.value = '';
@@ -226,15 +252,28 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
               hidden
               onChange={async (e) => {
                 const f = e.target.files?.[0];
-                if (f) {
-                  if (f.size > 2.5 * 1024 * 1024) {
-                    notify('Video too big to save (max 2.5 MB) — paste a link instead');
-                  } else {
-                    setBg({ src: await fileToDataUrl(f), kind: 'video' });
-                    notify('Background video added');
-                  }
-                }
                 e.target.value = '';
+                if (!f) return;
+                if (f.size > MAX_VIDEO_BYTES) {
+                  notify(`That video is ${fmtBytes(f.size)} — the limit is 50 GB`);
+                  return;
+                }
+                const room = await storageRoom();
+                if (room && f.size > room.free) {
+                  notify(`Not enough free space in this browser: ${fmtBytes(room.free)} left, video is ${fmtBytes(f.size)}`);
+                  return;
+                }
+                setSaving(true);
+                try {
+                  void navigator.storage?.persist?.(); // ask the browser not to evict it
+                  const ref = await saveMedia(f);
+                  setBg({ src: ref, kind: 'video', frame: undefined });
+                  notify('Background video saved');
+                } catch {
+                  notify("Couldn't save the video — your browser may be out of space");
+                } finally {
+                  setSaving(false);
+                }
               }}
             />
 
@@ -243,11 +282,28 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
               type="url"
               aria-label={`Background ${bg.kind} URL`}
               placeholder={bg.kind === 'video' ? 'https://…/clip.mp4' : 'https://…/photo.jpg'}
-              value={bg.src.startsWith('data:') ? '' : bg.src}
+              value={isLocalMedia(bg.src) ? '' : bg.src}
               onChange={(e) => setBg({ src: e.target.value })}
             />
-            {bg.src.startsWith('data:') && (
+            {isLocalMedia(bg.src) && (
               <p className="text-[11px] text-neutral-500">Using an uploaded file. Paste a URL above to replace it.</p>
+            )}
+            {bg.src.trim() && bgUrl && (
+              <FrameEditor
+                kind={bg.kind === 'video' ? 'video' : 'image'}
+                src={bgUrl}
+                frame={bg.frame}
+                shape="phone"
+                label={bg.kind === 'video' ? 'video' : 'image'}
+                onChange={(frame) => setBg({ frame })}
+              />
+            )}
+            {bg.kind === 'video' && (
+              <p className="rounded-2xl bg-neutral-50 px-3 py-2 text-xs leading-relaxed text-neutral-600">
+                Upload up to <b>50 GB</b>. Uploads are kept in this browser, so visitors who open your share link
+                only see a video you paste as a link. For a fast page, use a short muted loop (about 10–20 MB, 1080p
+                or less, MP4/H.264 with “fast start”).
+              </p>
             )}
 
             <div>
@@ -290,9 +346,9 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
             </label>
           </div>
         )}
-      </Card>
+      </AccordionSection>
 
-      <Card title="Buttons">
+      <AccordionSection {...sec('buttons')} icon={<FaHandPointer />} title="Buttons" summary={`${styleName} · ${shapeName} corners`}>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">Style</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {STYLES.map((s) => (
@@ -312,9 +368,9 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
         <p className="mt-3 text-[11px] text-neutral-500">
           Tip: give any single button its own colour or image from the <b>Style</b> button on the Links tab.
         </p>
-      </Card>
+      </AccordionSection>
 
-      <Card title="Font">
+      <AccordionSection {...sec('font')} icon={<FaFont />} title="Font" summary={fontName}>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {FONTS.map((f) => (
             <button
@@ -330,7 +386,7 @@ export default function AppearanceTab({ data, setData, notify, mode }: Props) {
             </button>
           ))}
         </div>
-      </Card>
-    </div>
+      </AccordionSection>
+    </AccordionFrame>
   );
 }

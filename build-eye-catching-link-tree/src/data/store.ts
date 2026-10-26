@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AppData, Design, LinkItem, Mode, ModeSettings, Music, Profile } from '../types';
 import { MODES } from './modes';
 
@@ -134,6 +134,7 @@ export function hydrate(raw: unknown): AppData {
       name: p.profile?.name ?? defaultData.profile.name,
       handle: p.profile?.handle ?? defaultData.profile.handle,
       avatar: p.profile?.avatar ?? '',
+      avatarFrame: p.profile?.avatarFrame,
     },
     links: p.links ? p.links.map((l) => makeLink(l)) : defaultData.links,
     socials: p.socials
@@ -155,8 +156,19 @@ function load(): AppData {
   return defaultData;
 }
 
+type Updater = (d: AppData) => AppData;
+
+/**
+ * App data with undo / redo. Edits made in quick succession (typing, dragging a slider)
+ * collapse into one history step; `silent` updates (like view counts) skip history.
+ */
 export function useStore() {
-  const [data, setData] = useState<AppData>(load);
+  const [data, setDataState] = useState<AppData>(load);
+  const current = useRef(data);
+  const past = useRef<AppData[]>([]);
+  const future = useRef<AppData[]>([]);
+  const lastEdit = useRef(0);
+
   useEffect(() => {
     try {
       localStorage.setItem(KEY, JSON.stringify(data));
@@ -164,7 +176,40 @@ export function useStore() {
       /* storage full */
     }
   }, [data]);
-  return [data, setData] as const;
+
+  const setData = useCallback((fn: Updater, opts?: { silent?: boolean }) => {
+    const before = current.current;
+    const next = fn(before);
+    if (next === before) return;
+    if (!opts?.silent) {
+      const now = Date.now();
+      if (now - lastEdit.current > 700) past.current = [...past.current.slice(-49), before];
+      lastEdit.current = now;
+      future.current = [];
+    }
+    current.current = next;
+    setDataState(next);
+  }, []);
+
+  const undo = useCallback(() => {
+    const prev = past.current.pop();
+    if (!prev) return;
+    future.current.push(current.current);
+    current.current = prev;
+    lastEdit.current = 0;
+    setDataState(prev);
+  }, []);
+
+  const redo = useCallback(() => {
+    const next = future.current.pop();
+    if (!next) return;
+    past.current.push(current.current);
+    current.current = next;
+    lastEdit.current = 0;
+    setDataState(next);
+  }, []);
+
+  return { data, setData, undo, redo, canUndo: past.current.length > 0, canRedo: future.current.length > 0 };
 }
 
 /* ---- small immutable helpers for per-page settings ---- */

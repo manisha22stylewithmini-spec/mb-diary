@@ -24,6 +24,13 @@ export interface Music {
   volume: number;
 }
 
+/** How a picture/video is positioned inside its frame: slide position (0–100) and zoom (≥ 1). */
+export interface Frame {
+  x: number;
+  y: number;
+  zoom: number;
+}
+
 export interface LinkItem {
   id: string;
   title: string;
@@ -38,6 +45,8 @@ export interface LinkItem {
   textColor: string;
   /** which page type shows this link */
   audience: Audience;
+  /** framing of the link's image */
+  imageFrame?: Frame;
 }
 
 export interface Social {
@@ -50,6 +59,7 @@ export interface Profile {
   name: string;
   handle: string;
   avatar: string;
+  avatarFrame?: Frame;
 }
 
 export interface CustomTheme {
@@ -70,6 +80,8 @@ export interface Background {
   blur: number;
   dim: number;
   grayscale: boolean;
+  /** framing of the background image / video */
+  frame?: Frame;
 }
 
 export interface Design {

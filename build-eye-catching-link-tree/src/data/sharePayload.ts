@@ -1,5 +1,6 @@
 import type { AppData } from '../types';
 import { hydrate } from './store';
+import { isLocalMedia } from '../utils/mediaStore';
 
 /*
  * A share link carries a compressed copy of the page inside its #hash, so whoever opens
@@ -7,12 +8,12 @@ import { hydrate } from './store';
  * (profile photo, uploaded media) is too heavy for a link and is left out.
  */
 
-const noData = (s: string) => (s.startsWith('data:') ? '' : s);
+const noData = (s: string) => (isLocalMedia(s) ? '' : s);
 
 function slim(d: AppData) {
   const modes = {} as Record<string, unknown>;
   for (const [key, m] of Object.entries(d.modes)) {
-    const bgIsData = m.design.background.src.startsWith('data:');
+    const bgIsData = isLocalMedia(m.design.background.src);
     modes[key] = {
       ...m,
       design: {
@@ -23,7 +24,7 @@ function slim(d: AppData) {
     };
   }
   return {
-    profile: { name: d.profile.name, handle: d.profile.handle, avatar: noData(d.profile.avatar) },
+    profile: { name: d.profile.name, handle: d.profile.handle, avatar: noData(d.profile.avatar), avatarFrame: d.profile.avatarFrame },
     links: d.links
       .filter((l) => l.enabled && l.title.trim())
       .map((l) => ({
@@ -35,6 +36,7 @@ function slim(d: AppData) {
         color: l.color,
         textColor: l.textColor,
         audience: l.audience,
+        imageFrame: l.imageFrame,
       })),
     socials: d.socials.filter((s) => s.url.trim()).map((s) => ({ platform: s.platform, url: s.url })),
     modes,

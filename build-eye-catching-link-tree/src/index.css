@@ -7,7 +7,8 @@
   --color-brand-teal: #00857a;
   --color-brand-purple: #8129d9;
   --color-brand-ink: #1a1033;
-  --color-canvas: #f5f4f9;
+  --color-canvas: #f6f6f7;
+  --color-ink: #111111;
 }
 
 :root {
@@ -26,6 +27,24 @@
 .btn-brand:hover {
   filter: brightness(1.1);
 }
+/* quiet, minimal buttons used across the editor */
+.btn-ink {
+  background: var(--color-ink);
+  color: #fff;
+  transition: background 0.2s, transform 0.2s;
+}
+.btn-ink:hover {
+  background: #2b2b2b;
+}
+.btn-soft {
+  background: #ececee;
+  color: #111;
+  transition: background 0.2s, transform 0.2s;
+}
+.btn-soft:hover {
+  background: #e1e1e4;
+}
+
 /* gradient wordmark text */
 .text-brand {
   background-image: var(--brand-gradient);
@@ -204,6 +223,10 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* scrolling still works; the bar itself is hidden (phone preview) */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-thumb { background: rgba(120, 120, 120, 0.35); border-radius: 9999px; }

@@ -1,11 +1,11 @@
 import { FaLinkedin, FaHeart, FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import Logo from './Logo';
 
-export const LINKEDIN_URL = 'https://www.linkedin.com/in/manisha-baroliya-488016265/';
+import { LINKEDIN_URL } from '../data/constants';
 
 export default function Footer() {
   return (
-    <footer className="mt-10 border-t border-black/5 bg-white">
+    <footer className="bg-white">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 py-8 sm:flex-row sm:justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-purple-50 ring-1 ring-black/5">

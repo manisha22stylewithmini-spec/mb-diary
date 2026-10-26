@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import QRCode from 'qrcode';
+import { isLocalMedia } from '../utils/mediaStore';
 import {
   FaXmark,
   FaCopy,
@@ -83,12 +83,16 @@ export default function ShareModal({ data, setData, initialMode, onClose, onOpen
   useEffect(() => {
     if (!url) return;
     setQrFailed(false);
-    QRCode.toDataURL(url, {
-      width: 720,
-      margin: 1,
-      errorCorrectionLevel: url.length > 700 ? 'L' : 'M',
-      color: { dark, light: '#ffffff' },
-    })
+    // the QR library is only needed here, so it loads the first time this tab is opened
+    import('qrcode')
+      .then(({ default: QRCode }) =>
+        QRCode.toDataURL(url, {
+          width: 720,
+          margin: 1,
+          errorCorrectionLevel: url.length > 700 ? 'L' : 'M',
+          color: { dark, light: '#ffffff' },
+        }),
+      )
       .then(setQr)
       .catch(() => {
         setQr('');
@@ -138,7 +142,7 @@ export default function ShareModal({ data, setData, initialMode, onClose, onOpen
     data.profile.avatar.startsWith('data:') ||
     MODES.some(
       (m) =>
-        data.modes[m].design.background.src.startsWith('data:') ||
+        isLocalMedia(data.modes[m].design.background.src) ||
         (data.modes[m].music.enabled && data.modes[m].music.source === 'upload'),
     );
 

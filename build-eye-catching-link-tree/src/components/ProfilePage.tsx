@@ -1,7 +1,10 @@
-import { useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { FaArrowUpRightFromSquare, FaLinkedin } from 'react-icons/fa6';
-import { LINKEDIN_URL } from './Footer';
+import { LINKEDIN_URL } from '../data/constants';
+import { loadFont } from '../utils/fonts';
+import { shouldSkipVideo, useMediaUrl } from '../utils/mediaStore';
 import MusicButton from './MusicButton';
+import Framed from './Framed';
 import type { AppData, LinkItem, Mode, ShareView } from '../types';
 import { FONTS, linkStyle, resolveTheme } from '../data/themes';
 import { MODES, MODE_META } from '../data/modes';
@@ -24,6 +27,9 @@ export default function ProfilePage({ data, view, onOpen }: Props) {
   const bg = design.background;
   const hasMedia = bg.kind !== 'theme' && !!bg.src.trim();
   const font = FONTS.find((f) => f.id === design.font) ?? FONTS[0];
+  const mediaSrc = useMediaUrl(bg.src);
+  const skipVideo = useMemo(shouldSkipVideo, []);
+  useEffect(() => loadFont(font.id), [font.id]);
   const visible = links.filter(
     (l) => l.enabled && l.title.trim() && (l.audience === 'both' || l.audience === mode),
   );
@@ -58,23 +64,26 @@ export default function ProfilePage({ data, view, onOpen }: Props) {
       {hasMedia && (
         <div className="absolute inset-0 overflow-hidden">
           {bg.kind === 'video' ? (
-            <video
-              key={bg.src}
-              src={bg.src}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="h-full w-full scale-110 object-cover"
-              style={{ filter: mediaFilter }}
-            />
+            mediaSrc &&
+            !skipVideo && (
+              <Framed
+                key={mediaSrc}
+                kind="video"
+                src={mediaSrc}
+                frame={bg.frame}
+                className={bg.blur > 0 ? 'scale-110' : ''}
+                style={{ filter: mediaFilter }}
+              />
+            )
           ) : (
-            <img
-              src={bg.src}
-              alt=""
-              className="h-full w-full scale-110 object-cover"
-              style={{ filter: mediaFilter }}
-            />
+            mediaSrc && (
+              <Framed
+                src={mediaSrc}
+                frame={bg.frame}
+                className={bg.blur > 0 ? 'scale-110' : ''}
+                style={{ filter: mediaFilter }}
+              />
+            )
           )}
           <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${bg.dim / 100})` }} />
         </div>
@@ -142,7 +151,7 @@ export default function ProfilePage({ data, view, onOpen }: Props) {
             }}
           >
             {profile.avatar ? (
-              <img src={profile.avatar} alt={profile.name} className="h-full w-full object-cover" />
+              <Framed src={profile.avatar} frame={profile.avatarFrame} alt={profile.name} />
             ) : (
               initials
             )}
@@ -228,12 +237,12 @@ export default function ProfilePage({ data, view, onOpen }: Props) {
                   style={linkStyle(theme, design, l)}
                 >
                   {l.image ? (
-                    <img
-                      src={l.image}
-                      alt=""
-                      className="h-11 w-11 shrink-0 object-cover"
+                    <span
+                      className="relative h-11 w-11 shrink-0 overflow-hidden"
                       style={{ borderRadius: radius === '9999px' ? '9999px' : '12px' }}
-                    />
+                    >
+                      <Framed src={l.image} frame={l.imageFrame} />
+                    </span>
                   ) : (
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center text-xl">
                       {l.emoji ? l.emoji : <Icon />}
