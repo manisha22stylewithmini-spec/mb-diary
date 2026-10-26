@@ -23,6 +23,7 @@ const BOX: Record<Shape, string> = {
   phone: 'h-[400px] w-[190px] rounded-[30px]',
 };
 
+const MAX_ZOOM = 5;
 const clamp = (n: number, lo: number, hi: number) => Math.round(Math.min(hi, Math.max(lo, n)) * 100) / 100;
 
 /**
@@ -36,6 +37,10 @@ export default function FrameEditor({ kind, src, frame, onChange, shape, label }
   const drag = useRef<{ x: number; y: number; f: Frame } | null>(null);
   const latest = useRef(f);
   latest.current = f;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinch = useRef<{ dist: number; zoom: number } | null>(null);
   const pending = useRef<Frame | null>(null);
   const raf = useRef(0);
   const [dragging, setDragging] = useState(false);
@@ -48,7 +53,7 @@ export default function FrameEditor({ kind, src, frame, onChange, shape, label }
     if (raf.current) return;
     raf.current = requestAnimationFrame(() => {
       raf.current = 0;
-      if (pending.current) onChange(pending.current);
+      if (pending.current) onChangeRef.current(pending.current);
       pending.current = null;
     });
   };
@@ -75,7 +80,22 @@ export default function FrameEditor({ kind, src, frame, onChange, shape, label }
     });
   };
 
-  const setZoom = (zoom: number) => emit({ ...latest.current, zoom: clamp(zoom, 1, 4) });
+  const setZoom = (zoom: number) => emit({ ...latest.current, zoom: clamp(zoom, 1, MAX_ZOOM) });
+
+  // scroll wheel / trackpad pinch over the picture zooms it (a native listener, so the page doesn't scroll too)
+  const zoomRef = useRef(setZoom);
+  zoomRef.current = setZoom;
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+      zoomRef.current(latest.current.zoom * Math.exp(-dy * (e.ctrlKey ? 0.012 : 0.0025)));
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, []);
 
   const onKey = (e: React.KeyboardEvent) => {
     const step = e.shiftKey ? 10 : 2;
@@ -91,13 +111,26 @@ export default function FrameEditor({ kind, src, frame, onChange, shape, label }
       emit({ ...cur, x: clamp(cur.x + move[e.key][0], 0, 100), y: clamp(cur.y + move[e.key][1], 0, 100) });
     } else if (e.key === '+' || e.key === '=') {
       e.preventDefault();
-      setZoom(cur.zoom + 0.1);
+      setZoom(cur.zoom + 0.15);
     } else if (e.key === '-') {
       e.preventDefault();
-      setZoom(cur.zoom - 0.1);
+      setZoom(cur.zoom - 0.15);
     } else if (e.key === '0') {
       e.preventDefault();
       emit(DEFAULT_FRAME);
+    }
+  };
+
+  const endPointer = (e: React.PointerEvent) => {
+    pointers.current.delete(e.pointerId);
+    pinch.current = null;
+    if (pointers.current.size === 1) {
+      // one finger left after a pinch: carry on dragging from where it is
+      const [p] = [...pointers.current.values()];
+      drag.current = { x: p.x, y: p.y, f: latest.current };
+    } else {
+      drag.current = null;
+      setDragging(false);
     }
   };
 
@@ -106,7 +139,7 @@ export default function FrameEditor({ kind, src, frame, onChange, shape, label }
   return (
     <div className="pop-in flex flex-col items-center gap-4 rounded-3xl bg-neutral-50 p-5 ring-1 ring-black/5">
       <p id={hintId} className="max-w-xs text-center text-xs leading-relaxed text-neutral-600">
-        Drag the {label} to choose what shows. Use the slider to zoom.
+        Drag the {label} to move it. Scroll, pinch or double-click to zoom — or use the slider.
         <span className="hidden lg:inline"> Watch the phone preview update as you move it.</span>
       </p>
 
@@ -114,31 +147,39 @@ export default function FrameEditor({ kind, src, frame, onChange, shape, label }
         ref={boxRef}
         role="group"
         tabIndex={0}
-        aria-label={`Adjust ${label}: arrow keys move it, plus and minus zoom, 0 resets`}
+        aria-label={`Adjust ${label}: drag or use arrow keys to move it; scroll, pinch, plus and minus to zoom; 0 resets`}
         aria-describedby={hintId}
         onKeyDown={onKey}
         onPointerDown={(e) => {
-          if (!natural.current) return;
           try {
             e.currentTarget.setPointerCapture(e.pointerId);
           } catch {
             /* pointer already gone */
           }
-          drag.current = { x: e.clientX, y: e.clientY, f: latest.current };
+          pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (pointers.current.size === 2) {
+            // a second finger turns the drag into a pinch-to-zoom
+            const [a, b] = [...pointers.current.values()];
+            pinch.current = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, zoom: latest.current.zoom };
+            drag.current = null;
+          } else if (natural.current) {
+            drag.current = { x: e.clientX, y: e.clientY, f: latest.current };
+          }
           setDragging(true);
         }}
         onPointerMove={(e) => {
+          if (pointers.current.has(e.pointerId)) pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+          if (pinch.current && pointers.current.size >= 2) {
+            const [a, b] = [...pointers.current.values()];
+            setZoom((pinch.current.zoom * Math.hypot(a.x - b.x, a.y - b.y)) / pinch.current.dist);
+            return;
+          }
           const d = drag.current;
           if (d) pan(d.f, e.clientX - d.x, e.clientY - d.y);
         }}
-        onPointerUp={() => {
-          drag.current = null;
-          setDragging(false);
-        }}
-        onPointerCancel={() => {
-          drag.current = null;
-          setDragging(false);
-        }}
+        onPointerUp={endPointer}
+        onPointerCancel={endPointer}
+        onDoubleClick={() => emit({ ...latest.current, zoom: latest.current.zoom > 1.05 ? 1 : 2 })}
         className={`relative touch-none select-none overflow-hidden bg-neutral-200 shadow-md ring-1 ring-black/10 ${BOX[shape]} ${
           dragging ? 'cursor-grabbing' : 'cursor-grab'
         }`}
@@ -178,7 +219,7 @@ export default function FrameEditor({ kind, src, frame, onChange, shape, label }
         <input
           type="range"
           min={1}
-          max={4}
+          max={MAX_ZOOM}
           step={0.01}
           value={f.zoom}
           aria-label={`Zoom ${label}`}
@@ -188,7 +229,7 @@ export default function FrameEditor({ kind, src, frame, onChange, shape, label }
         <button
           type="button"
           onClick={() => setZoom(f.zoom + 0.25)}
-          disabled={f.zoom >= 4}
+          disabled={f.zoom >= MAX_ZOOM}
           aria-label="Zoom in"
           className="btn-soft flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs disabled:opacity-40"
         >
