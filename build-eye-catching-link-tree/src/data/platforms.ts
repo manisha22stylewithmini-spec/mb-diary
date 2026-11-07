@@ -28,6 +28,7 @@ import {
   FaGooglePlay,
 } from 'react-icons/fa6';
 import { FaLayerGroup } from 'react-icons/fa6';
+import { MuzliIcon } from '../components/icons';
 
 export interface Platform {
   label: string;
@@ -56,6 +57,7 @@ export const PLATFORMS: Record<string, Platform> = {
   dribbble: { label: 'Dribbble', icon: FaDribbble, color: '#EA4C89', hosts: ['dribbble.com'] },
   behance: { label: 'Behance', icon: FaBehance, color: '#1769FF', hosts: ['behance.net'] },
   uilive: { label: 'UI.live', icon: FaLayerGroup, color: '#00B3A4', hosts: ['ui.live'] },
+  muzli: { label: 'Muzli', icon: MuzliIcon, color: '#4C3DF5', hosts: ['muz.li'] },
   figma: { label: 'Figma', icon: FaFigma, color: '#F24E1E', hosts: ['figma.com'] },
   medium: { label: 'Medium', icon: FaMedium, color: '#000000', hosts: ['medium.com'] },
   patreon: { label: 'Patreon', icon: FaPatreon, color: '#FF424D', hosts: ['patreon.com'] },

@@ -76,9 +76,7 @@ export default function TopBar({ mode, onMode, onShare, undo, redo, canUndo, can
     <header className="sticky top-0 z-40 bg-canvas/85 backdrop-blur-xl">
       <div className="mx-auto grid max-w-[1320px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-4 lg:px-6">
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-full bg-neutral-200/60" role="img" aria-label="Link Forest">
-            <Logo size={26} />
-          </span>
+          <Logo size={44} />
           <span className="hidden text-lg font-extrabold tracking-tight md:block" aria-hidden>
             Link<span className="text-brand">Forest</span>
           </span>

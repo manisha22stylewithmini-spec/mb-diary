@@ -45,20 +45,25 @@ export const defaultData: AppData = {
     avatar: '',
   },
   links: [
-    makeLink({ title: 'See my shots on Dribbble', url: 'https://dribbble.com', animation: 'pulse' }),
-    makeLink({ title: 'Case studies on Behance', url: 'https://behance.net' }),
-    makeLink({ title: 'Live UI projects on UI.live', url: 'https://ui.live', animation: 'glow' }),
-    makeLink({ title: 'Connect on LinkedIn', url: 'https://linkedin.com', audience: 'pro' }),
-    makeLink({ title: 'Follow me on Instagram', url: 'https://instagram.com' }),
-    makeLink({ title: 'Say hi on WhatsApp', url: 'https://wa.me/910000000000', emoji: '💬', audience: 'freelance' }),
+    makeLink({ title: 'See my shots on Dribbble', url: 'https://dribbble.com/manisha_baroliya', animation: 'pulse' }),
+    makeLink({ title: 'Case studies on Behance', url: 'https://www.behance.net/manishabarol2023' }),
+    makeLink({ title: 'Live UI projects on UI.live', url: 'https://ui.live/profile/Manishabaroliya', animation: 'glow' }),
+    makeLink({ title: 'Connect on LinkedIn', url: 'https://www.linkedin.com/in/manisha-baroliya-488016265/', audience: 'pro' }),
+    makeLink({ title: 'Code on GitHub', url: 'https://github.com/manisha22stylewithmini-spec', audience: 'pro' }),
+    makeLink({ title: 'Follow me on Instagram', url: 'https://www.instagram.com/offical_manisha_baroliya/' }),
+    makeLink({ title: 'Inspiration on Muzli', url: 'https://me.muz.li/manisha_baroliya', audience: 'freelance' }),
   ],
   socials: [
-    { id: uid(), platform: 'dribbble', url: 'https://dribbble.com' },
-    { id: uid(), platform: 'behance', url: 'https://behance.net' },
-    { id: uid(), platform: 'uilive', url: 'https://ui.live' },
-    { id: uid(), platform: 'instagram', url: 'https://instagram.com' },
-    { id: uid(), platform: 'linkedin', url: 'https://linkedin.com' },
-    { id: uid(), platform: 'email', url: 'mailto:hello@example.com' },
+    { id: uid(), platform: 'dribbble', url: 'https://dribbble.com/manisha_baroliya' },
+    { id: uid(), platform: 'behance', url: 'https://www.behance.net/manishabarol2023' },
+    { id: uid(), platform: 'uilive', url: 'https://ui.live/profile/Manishabaroliya' },
+    { id: uid(), platform: 'instagram', url: 'https://www.instagram.com/offical_manisha_baroliya/' },
+    { id: uid(), platform: 'linkedin', url: 'https://www.linkedin.com/in/manisha-baroliya-488016265/' },
+    { id: uid(), platform: 'facebook', url: 'https://www.facebook.com/uxdesignermanisha/' },
+    { id: uid(), platform: 'x', url: 'https://x.com/Manisha_Offical' },
+    { id: uid(), platform: 'pinterest', url: 'https://in.pinterest.com/uxdesignermanisha/' },
+    { id: uid(), platform: 'github', url: 'https://github.com/manisha22stylewithmini-spec' },
+    { id: uid(), platform: 'muzli', url: 'https://me.muz.li/manisha_baroliya' },
   ],
   modes: {
     pro: {
@@ -103,6 +108,19 @@ interface Loose {
   views?: number;
 }
 
+/** The placeholder links earlier versions shipped with. Saved data that still has only these is untouched demo content. */
+const OLD_PLACEHOLDER_URLS = new Set([
+  '',
+  'https://dribbble.com',
+  'https://behance.net',
+  'https://ui.live',
+  'https://instagram.com',
+  'https://linkedin.com',
+  'https://wa.me/910000000000',
+  'mailto:hello@example.com',
+]);
+const onlyPlaceholders = (urls: string[]) => urls.length > 0 && urls.every((u) => OLD_PLACEHOLDER_URLS.has(u.trim()));
+
 function mergeDesign(base: Design, over?: Partial<Design>): Design {
   return {
     ...base,
@@ -136,10 +154,12 @@ export function hydrate(raw: unknown): AppData {
       avatar: p.profile?.avatar ?? '',
       avatarFrame: p.profile?.avatarFrame,
     },
-    links: p.links ? p.links.map((l) => makeLink(l)) : defaultData.links,
-    socials: p.socials
-      ? p.socials.map((s) => ({ id: s.id ?? uid(), platform: s.platform, url: s.url }))
-      : defaultData.socials,
+    // anything still holding the old placeholder links is upgraded to the real profiles; edited lists are kept
+    links: p.links && !onlyPlaceholders(p.links.map((l) => l.url ?? '')) ? p.links.map((l) => makeLink(l)) : defaultData.links,
+    socials:
+      p.socials && !onlyPlaceholders(p.socials.map((s) => s.url))
+        ? p.socials.map((s) => ({ id: s.id ?? uid(), platform: s.platform, url: s.url }))
+        : defaultData.socials,
     modes,
     share: { combined: !!p.share?.combined },
     views: p.views ?? 0,

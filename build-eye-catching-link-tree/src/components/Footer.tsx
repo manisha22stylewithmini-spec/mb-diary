@@ -1,16 +1,14 @@
 import { FaLinkedin, FaHeart, FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import Logo from './Logo';
-
-import { LINKEDIN_URL } from '../data/constants';
+import { DESIGNER, LINKEDIN_URL } from '../data/constants';
+import { PLATFORMS } from '../data/platforms';
 
 export default function Footer() {
   return (
     <footer className="bg-white">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-4 py-8 sm:flex-row sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-purple-50 ring-1 ring-black/5">
-            <Logo size={24} />
-          </div>
+          <Logo size={52} />
           <div>
             <p className="text-sm font-extrabold tracking-tight">
               Link<span className="text-brand">Forest</span>
@@ -32,6 +30,26 @@ export default function Footer() {
             </a>
             <FaHeart className="text-xs text-brand-purple" aria-hidden />
           </p>
+          <nav aria-label={`Contact the designer, ${DESIGNER.name}`} className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-end">
+            {DESIGNER.links.map((l) => {
+              const p = PLATFORMS[l.platform];
+              const Icon = p.icon;
+              return (
+                <a
+                  key={l.platform}
+                  href={l.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={`${p.label} — ${DESIGNER.name}`}
+                  aria-label={`${p.label} — ${DESIGNER.name}`}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 text-base transition hover:-translate-y-0.5 hover:bg-neutral-200"
+                  style={{ color: p.color }}
+                >
+                  <Icon aria-hidden />
+                </a>
+              );
+            })}
+          </nav>
           <a
             href={LINKEDIN_URL}
             target="_blank"
@@ -39,7 +57,7 @@ export default function Footer() {
             className="btn-brand group flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold shadow-md hover:scale-105"
           >
             <FaLinkedin className="text-sm" />
-            Know me more on LinkedIn
+            Contact the designer on LinkedIn
             <FaArrowUpRightFromSquare className="text-[10px] opacity-80 transition group-hover:translate-x-0.5" />
           </a>
         </div>

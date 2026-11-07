@@ -14,7 +14,7 @@ const Editor = lazy(() => import('./Editor'));
 function Loading({ label }: { label: string }) {
   return (
     <div className="flex h-full items-center justify-center bg-canvas" role="status" aria-live="polite">
-      <Logo size={44} />
+      <Logo size={72} />
       <span className="sr-only">{label}</span>
     </div>
   );
