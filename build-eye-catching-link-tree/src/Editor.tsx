@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import Footer from './components/Footer';
 import ProfilePage from './components/ProfilePage';
@@ -9,7 +9,9 @@ import PanelFrame from './components/PanelFrame';
 import TopBar from './components/TopBar';
 import EditorNav, { type Area } from './components/EditorNav';
 import ShareModal from './components/ShareModal';
-import { MODE_META, VIEW_LABEL, liveHash } from './data/modes';
+import { MODE_META, VIEW_LABEL, previewHash } from './data/modes';
+import PublishModal from './components/PublishModal';
+import { getPublishedMeta, pageFingerprint } from './data/publish';
 import { cleanupMedia, isLocalRef } from './utils/mediaStore';
 import type { AppData, Mode, ShareView } from './types';
 
@@ -20,6 +22,7 @@ interface Props {
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  saveFailed: boolean;
 }
 
 const PANELS: Record<Area, { title: string; subtitle: (page: string) => string }> = {
@@ -51,10 +54,12 @@ function PhoneFrame({ data, view }: { data: AppData; view: ShareView }) {
 }
 
 /** The editor. Loaded on demand, so visitors who only open a share link never download it. */
-export default function Editor({ data, setData, undo, redo, canUndo, canRedo }: Props) {
+export default function Editor({ data, setData, undo, redo, canUndo, canRedo, saveFailed }: Props) {
   const [area, setArea] = useState<Area>('content');
   const [editMode, setEditMode] = useState<Mode>(readMode);
   const [showShare, setShowShare] = useState(false);
+  const [showPublish, setShowPublish] = useState(false);
+  const [published, setPublished] = useState(getPublishedMeta);
   const [mobilePreview, setMobilePreview] = useState(false);
   const [toast, setToast] = useState('');
 
@@ -62,6 +67,11 @@ export default function Editor({ data, setData, undo, redo, canUndo, canRedo }: 
     setToast(msg);
     window.setTimeout(() => setToast(''), 2600);
   }, []);
+
+  // never let edits disappear silently
+  useEffect(() => {
+    if (saveFailed) notify('Not saved — this browser is blocking or has run out of storage. Your edits will be lost on reload.');
+  }, [saveFailed, notify]);
 
   const chooseMode = (m: Mode) => {
     setEditMode(m);
@@ -96,8 +106,11 @@ export default function Editor({ data, setData, undo, redo, canUndo, canRedo }: 
     return () => window.removeEventListener('keydown', onKey);
   }, [undo, redo]);
 
+  const fingerprint = useMemo(() => pageFingerprint(data), [data]);
+  const publishState = !published ? 'never' : published.fingerprint === fingerprint ? 'clean' : 'dirty';
+
   const openLive = (view: ShareView) => {
-    window.location.hash = liveHash(view);
+    window.location.hash = previewHash(view);
     setShowShare(false);
   };
 
@@ -115,6 +128,9 @@ export default function Editor({ data, setData, undo, redo, canUndo, canRedo }: 
         redo={redo}
         canUndo={canUndo}
         canRedo={canRedo}
+        saveFailed={saveFailed}
+        publishState={publishState}
+        onPublish={() => setShowPublish(true)}
       />
 
       <div className="mx-auto flex w-full max-w-[1320px] gap-6 px-4 pb-28 pt-2 lg:min-h-0 lg:flex-1 lg:items-center lg:px-6 lg:pb-4">
@@ -125,6 +141,7 @@ export default function Editor({ data, setData, undo, redo, canUndo, canRedo }: 
             setMobilePreview(false);
           }}
           onShare={() => setShowShare(true)}
+          onPublish={() => setShowPublish(true)}
           shareOpen={showShare}
           previewing={mobilePreview}
           onPreview={() => setMobilePreview((v) => !v)}
@@ -155,7 +172,7 @@ export default function Editor({ data, setData, undo, redo, canUndo, canRedo }: 
             <PhoneFrame data={data} view={previewView} />
             <div className="mt-4 flex justify-center">
               <a
-                href={liveHash(previewView)}
+                href={previewHash(previewView)}
                 className="btn-soft flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold"
               >
                 Open live page <FaArrowUpRightFromSquare className="text-xs" aria-hidden />
@@ -165,11 +182,29 @@ export default function Editor({ data, setData, undo, redo, canUndo, canRedo }: 
         </aside>
       </div>
 
+      {showPublish && (
+        <PublishModal
+          data={data}
+          view={previewView}
+          editMode={editMode}
+          hasUnpublished={publishState !== 'clean'}
+          notify={notify}
+          onClose={() => setShowPublish(false)}
+          onPublished={() => setPublished(getPublishedMeta())}
+        />
+      )}
+
       {showShare && (
         <ShareModal
           data={data}
           setData={setData}
           initialMode={editMode}
+          published={published}
+          dirty={publishState === 'dirty'}
+          onPublish={() => {
+            setShowShare(false);
+            setShowPublish(true);
+          }}
           notify={notify}
           onClose={() => setShowShare(false)}
           onOpenLive={openLive}

@@ -1,4 +1,4 @@
-import { FaRotateLeft, FaRotateRight, FaShareNodes } from 'react-icons/fa6';
+import { FaCheck, FaCloudArrowUp, FaRotateLeft, FaRotateRight, FaShareNodes, FaTriangleExclamation } from 'react-icons/fa6';
 import Logo from './Logo';
 import type { Mode } from '../types';
 import { MODES, MODE_META } from '../data/modes';
@@ -11,6 +11,10 @@ interface Props {
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  saveFailed: boolean;
+  /** has this version been published, and has anything changed since */
+  publishState: 'never' | 'dirty' | 'clean';
+  onPublish: () => void;
 }
 
 /** Always-visible switch between the two pages: one tap flips what you're editing. */
@@ -71,7 +75,7 @@ function PageToggle({ mode, onMode }: Pick<Props, 'mode' | 'onMode'>) {
   );
 }
 
-export default function TopBar({ mode, onMode, onShare, undo, redo, canUndo, canRedo }: Props) {
+export default function TopBar({ mode, onMode, onShare, undo, redo, canUndo, canRedo, saveFailed, publishState, onPublish }: Props) {
   return (
     <header className="sticky top-0 z-40 bg-canvas/85 backdrop-blur-xl">
       <div className="mx-auto grid max-w-[1320px] grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-4 lg:px-6">
@@ -85,6 +89,34 @@ export default function TopBar({ mode, onMode, onShare, undo, redo, canUndo, can
         <PageToggle mode={mode} onMode={onMode} />
 
         <div className="flex items-center justify-end gap-3">
+          <span
+            role="status"
+            title={
+              saveFailed
+                ? 'This browser is not letting the page be stored, so edits will be lost when you reload.'
+                : publishState === 'clean'
+                  ? 'Visitors see exactly this version.'
+                  : 'Your edits are saved in this browser. Press Publish so visitors (and your other devices) see them.'
+            }
+            className={`items-center gap-1.5 text-xs font-semibold ${
+              saveFailed ? 'flex rounded-full bg-red-50 px-3 py-2 text-red-700' : 'hidden text-neutral-500 xl:flex'
+            }`}
+          >
+            {saveFailed ? (
+              <FaTriangleExclamation aria-hidden />
+            ) : publishState === 'clean' ? (
+              <FaCheck aria-hidden className="text-green-700" />
+            ) : (
+              <span aria-hidden className="h-2 w-2 rounded-full bg-amber-500" />
+            )}
+            {saveFailed
+              ? 'Not saved'
+              : publishState === 'clean'
+                ? 'Published'
+                : publishState === 'dirty'
+                  ? 'Unpublished changes'
+                  : 'Not published yet'}
+          </span>
           <div className="hidden overflow-hidden rounded-full bg-neutral-200/60 sm:flex" role="group" aria-label="History">
             <button
               type="button"
@@ -107,6 +139,14 @@ export default function TopBar({ mode, onMode, onShare, undo, redo, canUndo, can
               <FaRotateRight />
             </button>
           </div>
+          <button
+            type="button"
+            onClick={onPublish}
+            aria-label="Publish"
+            className="btn-ink hidden h-11 items-center gap-2 rounded-full px-4 text-[15px] font-bold shadow-md sm:flex"
+          >
+            <FaCloudArrowUp aria-hidden /> Publish
+          </button>
           <button
             type="button"
             onClick={onShare}

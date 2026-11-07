@@ -10,7 +10,7 @@ import { isLocalMedia } from '../utils/mediaStore';
 
 const noData = (s: string) => (isLocalMedia(s) ? '' : s);
 
-function slim(d: AppData) {
+export function slim(d: AppData) {
   const modes = {} as Record<string, unknown>;
   for (const [key, m] of Object.entries(d.modes)) {
     const bgIsData = isLocalMedia(m.design.background.src);

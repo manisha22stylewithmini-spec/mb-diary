@@ -16,7 +16,8 @@ import {
   FaLayerGroup,
 } from 'react-icons/fa6';
 import type { AppData, Mode, ShareView } from '../types';
-import { MODES, MODE_META, VIEW_LABEL, liveHash } from '../data/modes';
+import { MODES, MODE_META, VIEW_LABEL, liveHash, previewHash } from '../data/modes';
+import type { PublishedMeta } from '../data/publish';
 import { encodePayload } from '../data/sharePayload';
 import { patchMode } from '../data/store';
 import MusicEditor from './MusicEditor';
@@ -26,6 +27,11 @@ interface Props {
   data: AppData;
   setData: (fn: (d: AppData) => AppData) => void;
   initialMode: Mode;
+  /** set once the page has been published; then links stay short and always show the latest version */
+  published: PublishedMeta | null;
+  /** the page has changed since it was last published */
+  dirty: boolean;
+  onPublish: () => void;
   onClose: () => void;
   onOpenLive: (view: ShareView) => void;
   notify: (msg: string) => void;
@@ -39,7 +45,7 @@ const TABS: { id: Tab; label: string; icon: typeof FaQrcode }[] = [
   { id: 'music', label: 'Music', icon: FaMusic },
 ];
 
-export default function ShareModal({ data, setData, initialMode, onClose, onOpenLive, notify }: Props) {
+export default function ShareModal({ data, setData, initialMode, published, dirty, onPublish, onClose, onOpenLive, notify }: Props) {
   const [tab, setTab] = useState<Tab>('qr');
   const [type, setType] = useState<Mode>(initialMode);
   const [musicFor, setMusicFor] = useState<Mode>(initialMode);
@@ -69,8 +75,13 @@ export default function ShareModal({ data, setData, initialMode, onClose, onOpen
     };
   }, []);
 
-  // the link carries a compressed copy of the page, so rebuild it whenever the page changes
+  // Published: a short link that always shows the latest published page.
+  // Not published yet: the link carries a compressed copy of the page, rebuilt whenever it changes.
   useEffect(() => {
+    if (published) {
+      setUrl(`${window.location.origin}${window.location.pathname}${liveHash(view)}`);
+      return;
+    }
     let stale = false;
     encodePayload(data).then((payload) => {
       if (!stale) setUrl(`${window.location.origin}${window.location.pathname}${liveHash(view, payload)}`);
@@ -78,7 +89,7 @@ export default function ShareModal({ data, setData, initialMode, onClose, onOpen
     return () => {
       stale = true;
     };
-  }, [data, view]);
+  }, [data, view, published]);
 
   useEffect(() => {
     if (!url) return;
@@ -341,16 +352,34 @@ export default function ShareModal({ data, setData, initialMode, onClose, onOpen
             </div>
 
             <a
-              href={liveHash(view)}
+              href={previewHash(view)}
               onClick={() => onOpenLive(view)}
               className="btn-brand mt-4 flex items-center justify-center gap-2 rounded-full py-3 text-sm font-bold"
             >
-              Open live page <FaArrowUpRightFromSquare className="text-xs" aria-hidden />
+              Preview my draft <FaArrowUpRightFromSquare className="text-xs" aria-hidden />
             </a>
-            <p className="mt-3 text-center text-xs leading-snug text-neutral-600">
-              The link contains your page, so anyone who opens it sees this version. Edited something? Copy the link
-              again.
-            </p>
+            {published ? (
+              <p className="mt-3 text-center text-xs leading-snug text-neutral-600">
+                This link always shows your last published page.{' '}
+                {dirty && (
+                  <>
+                    <span className="font-semibold text-amber-700">You have unpublished changes</span> —{' '}
+                    <button type="button" onClick={onPublish} className="font-bold text-neutral-900 underline">
+                      publish them
+                    </button>{' '}
+                    so visitors see them.
+                  </>
+                )}
+              </p>
+            ) : (
+              <p className="mt-3 text-center text-xs leading-snug text-neutral-600">
+                This link carries a copy of your page as it is now. Want one short link that always stays up to date?{' '}
+                <button type="button" onClick={onPublish} className="font-bold text-neutral-900 underline">
+                  Publish your page
+                </button>
+                .
+              </p>
+            )}
           </div>
         )}
 
@@ -385,7 +414,7 @@ export default function ShareModal({ data, setData, initialMode, onClose, onOpen
           </>
         )}
 
-        {droppedMedia && (
+        {droppedMedia && !published && (
           <p className="mt-4 rounded-2xl bg-amber-50 px-3 py-2 text-xs leading-snug text-amber-800">
             Heads up: your profile photo and any uploaded images or music stay in this browser, so visitors who open
             the link see your initials and no uploaded media. Use image / audio links to include them.

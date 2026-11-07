@@ -31,13 +31,17 @@ export interface LiveRoute {
   view: ShareView;
   /** compressed copy of the page that travels inside a share link */
   payload: string;
+  /** the owner previewing their draft (#preview/…) rather than a visitor seeing the published page (#live/…) */
+  preview: boolean;
 }
 
 export function parseLiveHash(hash: string): LiveRoute | null {
-  const m = /^#live(?:\/(pro|freelance|both))?(?:~(.+))?$/.exec(hash);
+  const m = /^#(live|preview)(?:\/(pro|freelance|both))?(?:~(.+))?$/.exec(hash);
   if (!m) return null;
-  return { view: (m[1] as ShareView | undefined) ?? 'pro', payload: m[2] ?? '' };
+  return { view: (m[2] as ShareView | undefined) ?? 'pro', payload: m[3] ?? '', preview: m[1] === 'preview' };
 }
+
+export const previewHash = (view: ShareView) => `#preview/${view}`;
 
 export function liveHash(view: ShareView, payload = '') {
   return `#live/${view}${payload ? `~${payload}` : ''}`;

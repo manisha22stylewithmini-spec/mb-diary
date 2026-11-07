@@ -44,6 +44,11 @@ export async function saveMedia(file: Blob): Promise<string> {
   return id;
 }
 
+/** The stored file itself (used when publishing it). */
+export async function getMediaBlob(ref: string): Promise<Blob | null> {
+  return (await run<Blob | undefined>('readonly', (s) => s.get(ref))) ?? null;
+}
+
 const urls = new Map<string, Promise<string>>();
 
 /** Turns a reference into something a <video>/<img> can load. Plain links pass straight through. */

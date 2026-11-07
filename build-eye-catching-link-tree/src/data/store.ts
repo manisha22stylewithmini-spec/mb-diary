@@ -188,12 +188,15 @@ export function useStore() {
   const past = useRef<AppData[]>([]);
   const future = useRef<AppData[]>([]);
   const lastEdit = useRef(0);
+  // true when the browser refused to store the page (storage full, private window, blocked storage)
+  const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     try {
       localStorage.setItem(KEY, JSON.stringify(data));
+      setSaveFailed(false);
     } catch {
-      /* storage full */
+      setSaveFailed(true);
     }
   }, [data]);
 
@@ -229,7 +232,7 @@ export function useStore() {
     setDataState(next);
   }, []);
 
-  return { data, setData, undo, redo, canUndo: past.current.length > 0, canRedo: future.current.length > 0 };
+  return { data, setData, undo, redo, saveFailed, canUndo: past.current.length > 0, canRedo: future.current.length > 0 };
 }
 
 /* ---- small immutable helpers for per-page settings ---- */

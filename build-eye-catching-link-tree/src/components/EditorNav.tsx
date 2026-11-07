@@ -1,4 +1,4 @@
-import { FaLayerGroup, FaPalette, FaMusic, FaShareNodes, FaMobileScreen } from 'react-icons/fa6';
+import { FaLayerGroup, FaPalette, FaMusic, FaShareNodes, FaMobileScreen, FaCloudArrowUp } from 'react-icons/fa6';
 import type { IconType } from 'react-icons';
 
 export type Area = 'content' | 'design' | 'sound';
@@ -13,6 +13,7 @@ interface Props {
   area: Area;
   onArea: (a: Area) => void;
   onShare: () => void;
+  onPublish: () => void;
   shareOpen: boolean;
   previewing: boolean;
   onPreview: () => void;
@@ -40,7 +41,7 @@ function Item({
       type="button"
       onClick={onClick}
       {...aria}
-      className={`group flex w-16 flex-col items-center gap-1.5 text-xs font-semibold ${
+      className={`group flex w-14 flex-col items-center gap-1.5 text-xs font-semibold sm:w-16 ${
         active ? 'text-neutral-900' : 'text-neutral-600 hover:text-neutral-900'
       } ${className}`}
     >
@@ -61,7 +62,7 @@ function Item({
  * The editing areas. A pill-shaped rail down the left on desktop; the same items
  * become a bottom bar on phones, with a Preview switch added.
  */
-export default function EditorNav({ area, onArea, onShare, shareOpen, previewing, onPreview }: Props) {
+export default function EditorNav({ area, onArea, onShare, onPublish, shareOpen, previewing, onPreview }: Props) {
   return (
     <nav
       aria-label="Editing areas"
@@ -78,6 +79,7 @@ export default function EditorNav({ area, onArea, onShare, shareOpen, previewing
         />
       ))}
       <Item label="Share" icon={FaShareNodes} active={shareOpen} aria-haspopup="dialog" aria-expanded={shareOpen} onClick={onShare} />
+      <Item label="Publish" icon={FaCloudArrowUp} onClick={onPublish} className="sm:hidden" />
       <Item label="Preview" icon={FaMobileScreen} active={previewing} onClick={onPreview} className="lg:hidden" />
     </nav>
   );
